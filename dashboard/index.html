@@ -88,12 +88,71 @@
     </div>
 
     <div class="modal-backdrop" data-modal hidden>
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-        <p class="tx-state-emoji" aria-hidden="true">✌️</p>
-        <h2 id="modal-title">Segera hadir!</h2>
-        <p>Formulir tambah catatan lagi disiapin. Untuk sekarang, dashboard-nya dulu yang baca data real.</p>
-        <button class="btn-primary" type="button" data-modal-close>Tutup</button>
+      <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="form-head">
+          <h2 id="modal-title">Tambah Catatan</h2>
+          <button class="btn-icon" type="button" data-modal-close aria-label="Tutup">✕</button>
+        </div>
+        <form data-debt-form novalidate>
+          <p class="form-error" data-form-error hidden></p>
+
+          <div class="field">
+            <span class="field-label" id="dir-label">Ini soal uang siapa?</span>
+            <div class="seg" role="radiogroup" aria-labelledby="dir-label">
+              <button type="button" class="seg-opt" data-direction="receivable" role="radio" aria-checked="false">
+                <span class="seg-check" aria-hidden="true">✓</span>
+                <span class="seg-text">
+                  <span class="seg-title">Uang gue masih di orang lain</span>
+                  <span class="seg-sub">Orang lain masih punya uang gue.</span>
+                </span>
+              </button>
+              <button type="button" class="seg-opt" data-direction="payable" role="radio" aria-checked="false">
+                <span class="seg-check" aria-hidden="true">✓</span>
+                <span class="seg-text">
+                  <span class="seg-title">Gue masih punya utang</span>
+                  <span class="seg-sub">Gue yang harus bayar orang lain.</span>
+                </span>
+              </button>
+            </div>
+            <p class="field-error" data-error="direction" hidden>Pilih dulu yang mana.</p>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="f-name">Nama orang</label>
+            <input id="f-name" name="person_name" type="text" placeholder="Contoh: Budi" maxlength="120" autocomplete="off" />
+            <p class="field-error" data-error="person_name" hidden>Nama perlu diisi dulu.</p>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="f-amount">Nominal</label>
+            <div class="amount-wrap">
+              <span class="amount-prefix" aria-hidden="true">Rp</span>
+              <input id="f-amount" name="amount" type="text" inputmode="numeric" placeholder="150.000" autocomplete="off" />
+            </div>
+            <p class="field-error" data-error="amount" hidden>Nominal harus lebih dari Rp0.</p>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="f-note">Catatan <span class="opt">(opsional)</span></label>
+            <input id="f-note" name="note" type="text" placeholder="Contoh: Talangan makan kemarin" maxlength="500" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="f-due">Jatuh tempo <span class="opt">(opsional)</span></label>
+            <input id="f-due" name="due_date" type="date" />
+            <button type="button" class="link-btn" data-clear-due>Tidak ada jatuh tempo</button>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-ghost" data-modal-close>Batal</button>
+            <button type="submit" class="btn-primary" data-submit>
+              <span data-button-label>Simpan Catatan</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
+
+    <div class="toast" data-toast hidden role="status"></div>
   </body>
 </html>
