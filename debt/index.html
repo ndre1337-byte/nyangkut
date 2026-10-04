@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#F8FAFC" />
+    <title>Detail Catatan — Nyangkut</title>
+    <link rel="icon" type="image/png" href="/assets/logo-mark.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/debt/debt.css" />
+    <script defer src="/assets/brand.js"></script>
+    <script defer src="/assets/auth-provider.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="/assets/supabase-client.js"></script>
+    <script defer src="/debt/debt.js"></script>
+  </head>
+  <body data-page="debt">
+    <div class="dash">
+      <header class="dash-top">
+        <a class="dash-brand" href="https://nyangkut.vercel.app/" aria-label="Nyangkut">
+          <img src="/assets/logo-mark.png" alt="" width="28" height="28" />
+          <span>Nyangkut</span>
+        </a>
+        <button class="btn-ghost" type="button" data-sign-out>Keluar</button>
+      </header>
+
+      <main class="dash-main">
+        <a class="back-link" href="/dashboard/">← Kembali</a>
+
+        <div data-state="loading" class="tx-state">
+          <div class="spinner" aria-hidden="true"></div>
+          <p>Memuat catatan…</p>
+        </div>
+
+        <div data-state="error" class="tx-state" hidden>
+          <p class="tx-state-title">Yah, gagal memuat 😅</p>
+          <p class="tx-state-sub">Periksa koneksi lo, lalu coba lagi.</p>
+          <button class="btn-primary btn-sm" type="button" data-retry>Muat ulang</button>
+        </div>
+
+        <div data-state="notfound" class="tx-state" hidden>
+          <p class="tx-state-emoji" aria-hidden="true">🔍</p>
+          <p class="tx-state-title">Catatan tidak ditemukan.</p>
+          <p class="tx-state-sub">Mungkin sudah dihapus atau bukan milik lo.</p>
+          <a class="btn-primary btn-sm" href="/dashboard/">Kembali ke dashboard</a>
+        </div>
+
+        <div data-state="detail" hidden>
+          <section class="detail-head">
+            <h1 data-d="person_name">—</h1>
+            <div class="detail-chips">
+              <span class="chip" data-d="dir_chip">—</span>
+              <span class="chip" data-d="status_chip">—</span>
+            </div>
+            <p class="detail-dir-sub" data-d="dir_sub"></p>
+          </section>
+
+          <section class="sisa-hero">
+            <p class="sisa-label">Sisa</p>
+            <p class="sisa-value" data-d="remaining">Rp0</p>
+            <p class="sisa-sub" data-d="sisa_sub"></p>
+          </section>
+
+          <div class="cta-row" data-cta-wrap>
+            <button class="btn-primary btn-block" type="button" data-add-payment>+ Catat Pembayaran</button>
+          </div>
+
+          <section class="detail-card">
+            <h2>Detail transaksi</h2>
+            <dl class="detail-grid">
+              <div><dt>Total</dt><dd data-d="amount">—</dd></div>
+              <div><dt>Sudah dibayar</dt><dd data-d="paid">—</dd></div>
+              <div><dt>Jatuh tempo</dt><dd data-d="due">—</dd></div>
+            </dl>
+            <div class="detail-note" data-note-wrap hidden>
+              <p class="detail-note-label">Catatan</p>
+              <p class="detail-note-text" data-d="note"></p>
+            </div>
+          </section>
+
+          <section class="history-card">
+            <h2>Riwayat pembayaran</h2>
+            <p class="history-empty" data-history-empty hidden>Belum ada pembayaran.</p>
+            <ul class="history-list" data-history-list></ul>
+          </section>
+        </div>
+      </main>
+
+      <footer class="dash-foot">Nyangkut · Biar nggak lupa uang lo masih nyangkut di mana.</footer>
+    </div>
+
+    <!-- modal catat pembayaran -->
+    <div class="modal-backdrop" data-pay-modal hidden>
+      <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+        <div class="form-head">
+          <h2 id="pay-title">Catat Pembayaran</h2>
+          <button class="btn-icon" type="button" data-pay-close aria-label="Tutup">✕</button>
+        </div>
+        <p class="pay-context" data-pay-context></p>
+        <form data-pay-form novalidate>
+          <p class="form-error" data-pay-error hidden></p>
+          <div class="field">
+            <label class="field-label" for="p-amount">Nominal pembayaran</label>
+            <div class="amount-wrap">
+              <span class="amount-prefix" aria-hidden="true">Rp</span>
+              <input id="p-amount" type="text" inputmode="numeric" placeholder="100.000" autocomplete="off" />
+            </div>
+            <p class="field-error" data-pay-amount-error hidden></p>
+          </div>
+          <div class="field">
+            <label class="field-label" for="p-date">Tanggal pembayaran</label>
+            <input id="p-date" type="date" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="p-note">Catatan <span class="opt">(opsional)</span></label>
+            <input id="p-note" type="text" placeholder="Contoh: Transfer sebagian" maxlength="500" autocomplete="off" />
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost" data-pay-close>Batal</button>
+            <button type="submit" class="btn-primary" data-pay-submit>
+              <span data-pay-label>Simpan Pembayaran</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- modal konfirmasi hapus -->
+    <div class="modal-backdrop" data-del-modal hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="del-title">
+        <p class="tx-state-emoji" aria-hidden="true">🗑️</p>
+        <h2 id="del-title">Hapus pembayaran?</h2>
+        <p data-del-text>Yakin hapus pembayaran ini?</p>
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" data-del-close>Batal</button>
+          <button type="button" class="btn-danger" data-del-confirm>Ya, hapus</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" data-toast hidden role="status"></div>
+  </body>
+</html>
