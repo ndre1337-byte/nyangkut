@@ -183,23 +183,158 @@
     }
   }
 
-  // Modal placeholder "+ Tambah Catatan" (form full menyusul, di luar scope tahap ini).
+  // ---------- modal + form tambah catatan ----------
   var modal = document.querySelector("[data-modal]");
+  var form = document.querySelector("[data-debt-form]");
+  var submitBtn = document.querySelector("[data-submit]");
+  var submitLabel = submitBtn ? submitBtn.querySelector("[data-button-label]") : null;
+  var formError = document.querySelector("[data-form-error]");
+  var amountInput = document.getElementById("f-amount");
+  var dueInput = document.getElementById("f-due");
+  var direction = null;
+  var busy = false;
+  var toastTimer = null;
+
   function openModal() { if (modal) modal.hidden = false; }
-  function closeModal() { if (modal) modal.hidden = true; }
+
+  function closeModal() {
+    if (modal) modal.hidden = true;
+    resetForm();
+  }
+
+  function resetForm() {
+    direction = null;
+    busy = false;
+    if (form) form.reset();
+    document.querySelectorAll(".seg-opt").forEach(function (b) {
+      b.setAttribute("aria-checked", "false");
+    });
+    document.querySelectorAll("[data-error]").forEach(function (e) { e.hidden = true; });
+    if (formError) formError.hidden = true;
+    setBusy(false);
+  }
+
+  function setBusy(b) {
+    busy = b;
+    if (submitBtn) submitBtn.disabled = b;
+    if (submitLabel) submitLabel.textContent = b ? "Menyimpan…" : "Simpan Catatan";
+  }
+
+  function fieldError(name, show) {
+    var el = document.querySelector('[data-error="' + name + '"]');
+    if (el) el.hidden = !show;
+  }
+
+  function showFormError(msg) {
+    if (!formError) return;
+    formError.textContent = msg;
+    formError.hidden = !msg;
+  }
+
+  function toast(msg) {
+    var el = document.querySelector("[data-toast]");
+    if (!el) return;
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.hidden = true; }, 2600);
+  }
+
+  function friendlyInsertError(err) {
+    var msg = String((err && err.message) || "").toLowerCase();
+    if (msg.includes("jwt") || msg.includes("auth") || msg.includes("permission") || msg.includes("policy")) {
+      return "Sesi lo bermasalah. Coba keluar lalu masuk lagi ya.";
+    }
+    return "Gagal menyimpan. Periksa koneksi lo lalu coba lagi.";
+  }
+
   document.querySelectorAll("[data-add]").forEach(function (b) {
     b.addEventListener("click", openModal);
   });
-  var closeBtn = document.querySelector("[data-modal-close]");
-  if (closeBtn) closeBtn.addEventListener("click", closeModal);
+  document.querySelectorAll("[data-modal-close]").forEach(function (b) {
+    b.addEventListener("click", closeModal);
+  });
   if (modal) {
     modal.addEventListener("click", function (e) {
       if (e.target === modal) closeModal();
     });
   }
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") closeModal();
+    if (e.key === "Escape" && modal && !modal.hidden) closeModal();
   });
+
+  // Pilihan arah: segmented, tanpa default diam-diam.
+  document.querySelectorAll(".seg-opt").forEach(function (b) {
+    b.addEventListener("click", function () {
+      direction = b.getAttribute("data-direction");
+      document.querySelectorAll(".seg-opt").forEach(function (o) {
+        o.setAttribute("aria-checked", String(o === b));
+      });
+      fieldError("direction", false);
+    });
+  });
+
+  // Format rupiah saat mengetik: hanya digit, pemisah ribuan otomatis.
+  if (amountInput) {
+    amountInput.addEventListener("input", function () {
+      var digits = amountInput.value.replace(/\D/g, "").slice(0, 15);
+      amountInput.value = digits
+        ? new Intl.NumberFormat("id-ID").format(Number(digits))
+        : "";
+    });
+  }
+
+  var clearDue = document.querySelector("[data-clear-due]");
+  if (clearDue && dueInput) {
+    clearDue.addEventListener("click", function () { dueInput.value = ""; });
+  }
+
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (busy) return; // cegah double submit
+      showFormError("");
+
+      var nameInput = document.getElementById("f-name");
+      var name = nameInput.value.trim();
+      var amountDigits = amountInput.value.replace(/\D/g, "");
+      var amount = amountDigits ? Number(amountDigits) : 0;
+      var note = document.getElementById("f-note").value.trim();
+      var due = dueInput.value || null;
+
+      var valid = true;
+      if (!direction) { fieldError("direction", true); valid = false; }
+      if (!name) { fieldError("person_name", true); valid = false; } else { fieldError("person_name", false); }
+      if (!(amount > 0)) { fieldError("amount", true); valid = false; } else { fieldError("amount", false); }
+      if (!valid) return;
+
+      setBusy(true);
+
+      // Payload minimal: user_id diisi DEFAULT auth.uid() oleh database,
+      // paid_amount/status dipaksa trigger. Jangan kirim ketiganya.
+      var payload = {
+        direction: direction,
+        person_name: name,
+        amount: amount,
+        note: note || null,
+        due_date: due,
+      };
+
+      waitForClient().then(function (client) {
+        if (!client) throw new Error("no-client");
+        return client.from("debts").insert(payload);
+      }).then(function (res) {
+        if (res.error) throw res.error;
+        closeModal();
+        toast("Catatan berhasil disimpan.");
+        return load(); // re-fetch: kartu + list langsung update
+      }).catch(function (err) {
+        console.error("[Nyangkut] insert debt gagal:", err);
+        showFormError(friendlyInsertError(err));
+        setBusy(false);
+      });
+    });
+  }
 
   var retry = document.querySelector("[data-retry]");
   if (retry) retry.addEventListener("click", load);
