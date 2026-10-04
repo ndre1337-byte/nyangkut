@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f8fc" />
+    <title>Dashboard — Nyangkut</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/auth.css" />
+    <script defer src="/assets/brand.js"></script>
+    <script defer src="/assets/auth-provider.js"></script>
+    <script defer src="/assets/auth-ui.js"></script>
+  </head>
+  <body data-page="dashboard">
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="brand" data-brand href="https://nyangkut.vercel.app/" aria-label="Nyangkut, kembali ke awal"></a>
+        <a class="header-link" href="https://nyangkut.vercel.app/">Kembali ke Nyangkut</a>
+      </header>
+      <main class="dashboard-main">
+        <section class="dashboard-card" aria-labelledby="dashboard-title">
+          <div class="dashboard-icon" aria-hidden="true">✓</div>
+          <p class="eyebrow"><span class="eyebrow-dot"></span> Berhasil masuk</p>
+          <h1 id="dashboard-title">Hai, <span data-user-name>Teman</span>!</h1>
+          <p>Alur login Nyangkut sudah terhubung. Dashboard aplikasi bisa dilanjutkan di sini setelah backend auth dan data bisnis disambungkan.</p>
+          <div class="dashboard-actions">
+            <a class="primary-button" href="https://nyangkut.vercel.app/">Kembali ke Nyangkut</a>
+            <button class="secondary-button" type="button" data-sign-out>Keluar</button>
+          </div>
+          <p class="demo-note">Halaman ini hanya placeholder fondasi auth; belum memuat fitur atau data bisnis.</p>
+        </section>
+      </main>
+      <footer class="site-footer">© 2026 Nyangkut · Biar nggak lupa uang lo masih nyangkut di mana.</footer>
+    </div>
+  </body>
+</html>

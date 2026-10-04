@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f8fc" />
+    <title>Daftar gratis — Nyangkut</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/auth.css" />
+    <script defer src="/assets/brand.js"></script>
+    <script defer src="/assets/auth-provider.js"></script>
+    <script defer src="/assets/auth-ui.js"></script>
+  </head>
+  <body data-page="register">
+    <div class="page-shell">
+      <header class="site-header">
+        <a class="brand" data-brand href="https://nyangkut.vercel.app/" aria-label="Nyangkut, kembali ke awal"></a>
+        <a class="header-link" href="/login/">Sudah punya akun? <strong>Masuk</strong></a>
+      </header>
+      <main class="auth-main">
+        <section class="auth-card" aria-labelledby="page-title">
+          <div class="form-panel">
+            <div class="form-inner">
+              <p class="eyebrow"><span class="eyebrow-dot"></span> Gratis untuk mulai</p>
+              <h1 id="page-title">Yuk, mulai catat.</h1>
+              <p class="intro">Bikin akun Nyangkut supaya nggak ada uang yang kelewat lagi.</p>
+              <div class="notice" data-notice role="alert" aria-live="polite" hidden></div>
+              <form class="auth-form" data-auth-form novalidate>
+                <div class="field">
+                  <label for="name">Nama</label>
+                  <input id="name" name="name" type="text" placeholder="Nama panggilan lo" autocomplete="name" maxlength="80" required aria-describedby="name-error" />
+                  <span class="field-error" id="name-error" data-error-for="name"></span>
+                </div>
+                <div class="field">
+                  <label for="email">Email</label>
+                  <input id="email" name="email" type="email" placeholder="nama@email.com" autocomplete="email" inputmode="email" required aria-describedby="email-error" />
+                  <span class="field-error" id="email-error" data-error-for="email"></span>
+                </div>
+                <div class="field">
+                  <label for="password">Password</label>
+                  <div class="input-wrap">
+                    <input id="password" name="password" type="password" placeholder="Buat password" autocomplete="new-password" required aria-describedby="password-error password-hint" />
+                    <button class="password-toggle" type="button" data-password-toggle aria-label="Tampilkan password" aria-controls="password" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                  <span class="field-error" id="password-error" data-error-for="password"></span>
+                  <span class="field-hint" id="password-hint">Minimal 8 karakter.</span>
+                </div>
+                <div class="field">
+                  <label for="confirm-password">Ulangi password</label>
+                  <div class="input-wrap">
+                    <input id="confirm-password" name="confirmPassword" type="password" placeholder="Masukkan password sekali lagi" autocomplete="new-password" required aria-describedby="confirm-error" />
+                    <button class="password-toggle" type="button" data-password-toggle aria-label="Tampilkan password" aria-controls="confirm-password" aria-pressed="false">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  </div>
+                  <span class="field-error" id="confirm-error" data-error-for="confirmPassword"></span>
+                </div>
+                <button class="primary-button" type="submit" data-submit data-idle-label="Buat akun gratis" aria-busy="false"><span data-button-label>Buat akun gratis</span><span class="spinner" data-spinner hidden aria-hidden="true"></span></button>
+              </form>
+              <p class="form-switch">Sudah punya akun? <a class="text-link" href="/login/">Masuk</a></p>
+              <p class="demo-note">Mode pratinjau: akun hanya simulasi. Password tidak disimpan.</p>
+              <p class="form-note">Gratis untuk mulai · Nggak perlu kartu kredit</p>
+            </div>
+          </div>
+          <aside class="art-panel" aria-label="Pratinjau ringkasan Nyangkut">
+            <div class="art-content">
+              <p class="art-kicker">Lebih lega, lebih rapi</p>
+              <h2 class="art-title">Catat sekali. Biar kepala nggak penuh.</h2>
+              <p class="art-copy">Mulai dari talangan teman sampai utang sendiri. Semua bisa lo ingat dengan cara yang lebih ringan.</p>
+              <div class="preview-card">
+                <div class="preview-top"><p class="preview-heading">Minggu ini</p><span class="preview-status"><span class="status-dot"></span> terpantau</span></div>
+                <p class="preview-label">Jatuh tempo minggu ini</p>
+                <p class="preview-amount">Rp1.600.000</p>
+                <div class="preview-progress" aria-label="62 persen tercatat"><span></span></div>
+                <div class="preview-footer"><span>4 catatan aktif</span><div class="mini-people" aria-label="4 orang"><span class="mini-person">A</span><span class="mini-person">D</span><span class="mini-person">R</span></div></div>
+              </div>
+              <div class="reminder-chip"><span class="reminder-icon" aria-hidden="true">✓</span> Catat · diingatkan · beres</div>
+            </div>
+          </aside>
+        </section>
+      </main>
+      <footer class="site-footer">© 2026 Nyangkut · Biar nggak lupa uang lo masih nyangkut di mana.</footer>
+    </div>
+  </body>
+</html>
