@@ -227,7 +227,12 @@ body {
   border-radius: var(--radius);
   padding: 14px 16px;
   box-shadow: var(--shadow);
+  display: block;
+  color: inherit;
+  text-decoration: none;
 }
+
+.tx-item:hover { border-color: var(--lavender); }
 
 .tx-row-top {
   display: flex;
