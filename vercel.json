@@ -16,5 +16,11 @@
       "source": "/debt",
       "destination": "/debt/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/reminders/run",
+      "schedule": "0 0 * * *"
+    }
   ]
 }
