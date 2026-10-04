@@ -39,6 +39,9 @@
 
   var client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+  // Dipakai layer data (mis. dashboard) — client yang sama, session yang sama.
+  window.NyangkutDB = client;
+
   function toUser(supaUser) {
     if (!supaUser) return null;
     var meta = supaUser.user_metadata || {};
