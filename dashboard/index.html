@@ -3,38 +3,97 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#f7f8fc" />
+    <meta name="theme-color" content="#F8FAFC" />
     <title>Dashboard — Nyangkut</title>
+    <link rel="icon" type="image/png" href="/assets/logo-mark.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/assets/auth.css" />
+    <link rel="stylesheet" href="/dashboard/dashboard.css" />
     <script defer src="/assets/brand.js"></script>
     <script defer src="/assets/auth-provider.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="/assets/supabase-client.js"></script>
     <script defer src="/assets/auth-ui.js"></script>
+    <script defer src="/dashboard/dashboard.js"></script>
   </head>
   <body data-page="dashboard">
-    <div class="page-shell">
-      <header class="site-header">
-        <a class="brand" data-brand href="https://nyangkut.vercel.app/" aria-label="Nyangkut, kembali ke awal"></a>
-        <a class="header-link" href="https://nyangkut.vercel.app/">Kembali ke Nyangkut</a>
+    <div class="dash">
+      <header class="dash-top">
+        <a class="dash-brand" href="https://nyangkut.vercel.app/" aria-label="Nyangkut">
+          <img src="/assets/logo-mark.png" alt="" width="28" height="28" />
+          <span>Nyangkut</span>
+        </a>
+        <button class="btn-ghost" type="button" data-sign-out>Keluar</button>
       </header>
-      <main class="dashboard-main">
-        <section class="dashboard-card" aria-labelledby="dashboard-title">
-          <div class="dashboard-icon" aria-hidden="true">✓</div>
-          <p class="eyebrow"><span class="eyebrow-dot"></span> Berhasil masuk</p>
-          <h1 id="dashboard-title">Hai, <span data-user-name>Teman</span>!</h1>
-          <p>Alur login Nyangkut sudah terhubung. Dashboard aplikasi bisa dilanjutkan di sini setelah backend auth dan data bisnis disambungkan.</p>
-          <div class="dashboard-actions">
-            <a class="primary-button" href="https://nyangkut.vercel.app/">Kembali ke Nyangkut</a>
-            <button class="secondary-button" type="button" data-sign-out>Keluar</button>
+
+      <main class="dash-main">
+        <section class="greeting">
+          <h1>Halo, <span data-user-name>Teman</span> 👋</h1>
+          <p class="greeting-sub">Ini ringkasan uang lo yang masih nyangkut.</p>
+        </section>
+
+        <section class="cards" aria-label="Ringkasan">
+          <article class="card card-hero">
+            <p class="card-label">Uang masih nyangkut</p>
+            <p class="card-value" data-card="receivable">Rp0</p>
+            <p class="card-hint">yang harus balik ke lo</p>
+          </article>
+          <article class="card">
+            <p class="card-label">Harus lo bayar</p>
+            <p class="card-value" data-card="payable">Rp0</p>
+            <p class="card-hint">yang harus lo keluarin</p>
+          </article>
+          <article class="card">
+            <p class="card-label">Telat bayar</p>
+            <p class="card-value card-value-danger" data-card="overdue">Rp0</p>
+            <p class="card-hint">lewat jatuh tempo</p>
+          </article>
+          <article class="card">
+            <p class="card-label">Jatuh tempo minggu ini</p>
+            <p class="card-value" data-card="dueWeek">Rp0</p>
+            <p class="card-hint">Senin–Minggu ini</p>
+          </article>
+        </section>
+
+        <section class="tx-section" aria-label="Catatan terbaru">
+          <div class="tx-head">
+            <h2>Catatan terbaru</h2>
+            <button class="btn-primary btn-sm" type="button" data-add>+ Tambah Catatan</button>
           </div>
-          <p class="demo-note">Halaman ini hanya placeholder fondasi auth; belum memuat fitur atau data bisnis.</p>
+
+          <div class="tx-state" data-state="loading">
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Memuat catatan lo…</p>
+          </div>
+
+          <div class="tx-state" data-state="error" hidden>
+            <p class="tx-state-title">Yah, gagal memuat 😅</p>
+            <p class="tx-state-sub">Periksa koneksi lo, lalu coba lagi.</p>
+            <button class="btn-primary btn-sm" type="button" data-retry>Muat ulang</button>
+          </div>
+
+          <div class="tx-state" data-state="empty" hidden>
+            <p class="tx-state-emoji" aria-hidden="true">🪙</p>
+            <p class="tx-state-title">Belum ada uang yang nyangkut.</p>
+            <p class="tx-state-sub">Catat dulu supaya nggak lupa.</p>
+            <button class="btn-primary" type="button" data-add>+ Tambah Catatan</button>
+          </div>
+
+          <ul class="tx-list" data-tx-list hidden></ul>
         </section>
       </main>
-      <footer class="site-footer">© 2026 Nyangkut · Biar nggak lupa uang lo masih nyangkut di mana.</footer>
+
+      <footer class="dash-foot">Nyangkut · Biar nggak lupa uang lo masih nyangkut di mana.</footer>
+    </div>
+
+    <div class="modal-backdrop" data-modal hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <p class="tx-state-emoji" aria-hidden="true">✌️</p>
+        <h2 id="modal-title">Segera hadir!</h2>
+        <p>Formulir tambah catatan lagi disiapin. Untuk sekarang, dashboard-nya dulu yang baca data real.</p>
+        <button class="btn-primary" type="button" data-modal-close>Tutup</button>
+      </div>
     </div>
   </body>
 </html>
