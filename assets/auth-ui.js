@@ -57,6 +57,9 @@
 
   function friendlyError(error) {
     const message = String(error?.message || "").toLowerCase();
+    if (message.includes("rate limit") || message.includes("429")) {
+      return "Lagi rame di server email. Tunggu beberapa menit, lalu coba lagi ya.";
+    }
     if (message.includes("already") || message.includes("registered") || message.includes("exists")) {
       return "Email ini sudah terdaftar. Coba masuk saja, ya.";
     }
