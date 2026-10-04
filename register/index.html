@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="/assets/auth.css" />
     <script defer src="/assets/brand.js"></script>
     <script defer src="/assets/auth-provider.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="/assets/supabase-client.js"></script>
     <script defer src="/assets/auth-ui.js"></script>
   </head>
   <body data-page="register">
@@ -62,7 +64,6 @@
                 <button class="primary-button" type="submit" data-submit data-idle-label="Buat akun gratis" aria-busy="false"><span data-button-label>Buat akun gratis</span><span class="spinner" data-spinner hidden aria-hidden="true"></span></button>
               </form>
               <p class="form-switch">Sudah punya akun? <a class="text-link" href="/login/">Masuk</a></p>
-              <p class="demo-note">Mode pratinjau: akun hanya simulasi. Password tidak disimpan.</p>
               <p class="form-note">Gratis untuk mulai · Nggak perlu kartu kredit</p>
             </div>
           </div>

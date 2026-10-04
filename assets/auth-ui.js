@@ -60,6 +60,9 @@
     if (message.includes("already") || message.includes("registered") || message.includes("exists")) {
       return "Email ini sudah terdaftar. Coba masuk saja, ya.";
     }
+    if (message.includes("not confirmed") || message.includes("not verified")) {
+      return "Email lo belum diverifikasi. Cek inbox lo dulu, ya.";
+    }
     if (message.includes("invalid") || message.includes("credential") || message.includes("password")) {
       return "Email atau password belum cocok. Coba periksa lagi.";
     }
@@ -117,6 +120,14 @@
         setBusy(false);
       }
     });
+  }
+
+  if (page === "login" || page === "register") {
+    auth.getSession()
+      .then((session) => {
+        if (session && session.user) window.location.replace("/dashboard/");
+      })
+      .catch(() => {});
   }
 
   if (page === "dashboard") {

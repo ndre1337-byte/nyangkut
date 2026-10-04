@@ -11,6 +11,8 @@
     <link rel="stylesheet" href="/assets/auth.css" />
     <script defer src="/assets/brand.js"></script>
     <script defer src="/assets/auth-provider.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="/assets/supabase-client.js"></script>
     <script defer src="/assets/auth-ui.js"></script>
   </head>
   <body data-page="login">
@@ -47,7 +49,6 @@
                 <button class="primary-button" type="submit" data-submit data-idle-label="Masuk" aria-busy="false"><span data-button-label>Masuk</span><span class="spinner" data-spinner hidden aria-hidden="true"></span></button>
               </form>
               <p class="form-switch">Baru di Nyangkut? <a class="text-link" href="/register/">Daftar gratis</a></p>
-              <p class="demo-note">Mode pratinjau: autentikasi belum tersambung ke backend. Form ini hanya untuk melihat alur UI.</p>
               <p class="form-note">Dengan masuk, catatan lo tetap pribadi dan hanya bisa lo kelola.</p>
             </div>
           </div>
