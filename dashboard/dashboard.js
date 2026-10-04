@@ -105,8 +105,9 @@
 
     txList.innerHTML = "";
     debts.forEach(function (d) {
-      var li = document.createElement("li");
-      li.className = "tx-item";
+      var a = document.createElement("a");
+      a.className = "tx-item";
+      a.href = "/debt/?id=" + encodeURIComponent(d.id);
 
       var rem = remaining(d);
       var dirChip = d.direction === "receivable"
@@ -120,13 +121,13 @@
 
       var noteLine = d.note ? '<p class="tx-note">“' + escapeHtml(d.note) + "”</p>" : "";
 
-      li.innerHTML =
+      a.innerHTML =
         '<div class="tx-row-top"><p class="tx-name">' + escapeHtml(d.person_name) + "</p>" + statusChip + "</div>" +
         '<p class="tx-meta">' + dirChip + " · " + rupiah(d.amount) + "</p>" +
         remLine +
         '<div class="tx-foot"><span>📅 ' + fmtDue(d.due_date) + "</span></div>" +
         noteLine;
-      txList.appendChild(li);
+      txList.appendChild(a);
     });
     showState("list");
   }
