@@ -791,6 +791,195 @@ a.hub-card:hover, button.hub-card:hover {
   white-space: nowrap;
 }
 
+/* ============ Premium Hook (dashboard sales card) ============ */
+.premium-hook {
+  background: #0A0B14;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  border-radius: 20px;
+  padding: 18px;
+  margin-bottom: 18px;
+  position: relative;
+  overflow: hidden;
+  color: #F8FAFC;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3), 0 0 40px rgba(139, 92, 246, 0.1);
+}
+.premium-hook[hidden] { display: none; }
+.premium-hook::before {
+  content: "";
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hook-inner { position: relative; z-index: 1; }
+.hook-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.hook-title-row strong {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #F8FAFC;
+  line-height: 1.35;
+  margin-bottom: 0 !important;
+}
+.hook-badge {
+  flex: none;
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #FCD34D;
+  background: rgba(252, 211, 77, 0.12);
+  border: 1px solid rgba(252, 211, 77, 0.3);
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.hook-badge-active {
+  color: #fff;
+  background: #22C55E;
+  border-color: #22C55E;
+}
+.hook-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hook-main + .hook-benefits,
+.hook-main + .hook-price { margin-top: 12px; }
+.hook-crown {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #23263F 0%, #3a2f1a 100%);
+  border: 1px solid rgba(252, 211, 77, 0.3);
+  font-size: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 16px rgba(252, 211, 77, 0.15);
+}
+.hook-text { flex: 1; min-width: 0; }
+.hook-text small {
+  display: block;
+  font-size: 0.82rem;
+  color: #9CA3AF;
+  line-height: 1.5;
+}
+.hook-tagline {
+  color: #FCD34D !important;
+  font-weight: 600;
+}
+.hook-benefits {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.hook-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: #F8FAFC;
+}
+.hook-benefits li > span:first-child {
+  flex: none;
+  font-size: 1.1rem;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.hook-benefits li small {
+  display: block;
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+.hook-price {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #F8FAFC;
+  margin-bottom: 12px;
+}
+.hook-price span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9CA3AF;
+}
+.hook-price em {
+  display: block;
+  font-style: normal;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+.hook-cta {
+  flex: none;
+  display: inline-block;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform var(--ease), box-shadow var(--ease);
+}
+.hook-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+}
+/* Desktop: horizontal layout */
+@media (min-width: 900px) {
+  .premium-hook { padding: 20px 24px; }
+  .hook-inner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .hook-main { flex: 1; margin-bottom: 0; }
+  .hook-benefits {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 0;
+    flex: 1.2;
+  }
+  .hook-price { margin: 0; text-align: right; }
+}
+
+/* ============ View Switching ============ */
+/* Dashboard overview vs dedicated views. Premium Hub tidak di dashboard. */
+[data-view][hidden] { display: none !important; }
+
+/* ============ Catatan Terbaru (recent) ============ */
+.recent-section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow);
+  scroll-margin-top: 20px;
+}
+.recent-section .tx-list { margin: 0; }
+
 /* 5-item bottom nav: pastikan muat di 320px */
 @media (max-width: 380px) {
   .bn-link { font-size: 0.62rem; padding: 8px 2px; }

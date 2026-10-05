@@ -138,18 +138,15 @@
   // ---------- Premium Navigation ----------
   // Menu sheet + Premium Hub dikonfigurasi berdasarkan hasPremiumAccess().
   // Free: teaser #premium. Premium/Early Access: hub #premium-hub.
+  // Premium sections TIDAK auto-show di dashboard — hanya via view "premium".
   function setupPremiumNav() {
     var premium = hasPremiumAccess(userProfile);
     var teaser = document.getElementById("premium");
     var hub = document.getElementById("premium-hub");
 
-    if (premium) {
-      if (teaser) teaser.hidden = true;
-      if (hub) hub.hidden = false;
-    } else {
-      if (teaser) teaser.hidden = false;
-      if (hub) hub.hidden = true;
-    }
+    // Set which premium section is active (tapi tetap hidden sampai view premium dibuka).
+    if (teaser) teaser.dataset.premiumActive = premium ? "false" : "true";
+    if (hub) hub.dataset.premiumActive = premium ? "true" : "false";
 
     // Menu sheet (mobile): update link premium.
     var menuPremium = document.querySelector("[data-menu-premium]");
@@ -181,6 +178,203 @@
         sidePremium.setAttribute("href", "#premium");
       }
     }
+
+    // Initial view + hashchange listener.
+    showView();
+    window.addEventListener("hashchange", showView);
+  }
+
+  // ============ View Switching ============
+  // Dashboard = overview (ringkasan, hook, kalender, terbaru).
+  // Dedicated views: catatan, orang, berulang, premium.
+  // Premium Hub TIDAK dirender di dashboard — hanya di view "premium".
+  function showView() {
+    var hash = (window.location.hash || "").replace("#", "");
+    var view = "dashboard"; // default
+
+    // Map hash ke view.
+    if (hash === "catatan") view = "catatan";
+    else if (hash === "orang") view = "orang";
+    else if (hash === "berulang") view = "berulang";
+    else if (hash === "premium" || hash === "premium-hub") view = "premium";
+    else if (hash === "kalender") view = "dashboard"; // kalender ada di dashboard
+    // Hash lain (termasuk kosong) = dashboard.
+
+    // Hide semua views, show yang aktif.
+    document.querySelectorAll("[data-view]").forEach(function (el) {
+      var elView = el.getAttribute("data-view");
+      if (elView === "premium") {
+        // Premium: hanya tampilkan section yang aktif (teaser vs hub).
+        var isActive = el.dataset.premiumActive === "true";
+        el.hidden = !(view === "premium" && isActive);
+      } else {
+        el.hidden = (elView !== view);
+      }
+    });
+
+    // Update nav active states.
+    document.querySelectorAll("[data-nav]").forEach(function (nav) {
+      var navView = nav.getAttribute("data-nav");
+      // "kalender" nav tetap highlight saat di dashboard (karena kalender di dashboard).
+      var isActive = (navView === view) || (navView === "kalender" && view === "dashboard" && hash === "kalender");
+      nav.classList.toggle("is-active", isActive);
+    });
+
+    // Scroll behavior:
+    // - Ganti view (non-dashboard): scroll ke atas.
+    // - Hash "kalender": scroll ke section kalender di dashboard.
+    // - Dashboard default: biarkan (tidak scroll paksa).
+    if (view !== "dashboard") {
+      window.scrollTo(0, 0);
+    } else if (hash === "kalender") {
+      var calEl = document.getElementById("kalender");
+      if (calEl) calEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  // ============ Premium Hook (dashboard sales card) ============
+  // Compact contextual card setelah summary. Priority:
+  // 1. Near Free limit (8+/10 active) | 2. Banyak jatuh tempo | 3. Punya recurring | 4. Default
+  function getPremiumHookType() {
+    var premium = hasPremiumAccess(userProfile);
+    if (premium) {
+      // Bedakan Early Access vs plan=premium murni.
+      if (userProfile && userProfile.early_access === true && userProfile.plan !== "premium") {
+        return "early-access";
+      }
+      return "premium";
+    }
+    // Free user: cek kondisi kontekstual.
+    var active = (allDebts || []).filter(function (d) {
+      return d.status !== "paid" && (d.amount - (d.paid_amount || 0)) > 0;
+    });
+    if (active.length >= 8) return "near-limit";
+    var withDue = active.filter(function (d) { return !!d.due_date; });
+    if (withDue.length >= 3) return "many-due";
+    var hasRecur = (allRules || []).some(function (r) { return r.is_active !== false; });
+    if (hasRecur) return "has-recurring";
+    return "default";
+  }
+
+  function renderPremiumHook() {
+    var hook = document.querySelector("[data-premium-hook]");
+    if (!hook) return;
+    var inner = hook.querySelector("[data-hook-inner]");
+    if (!inner) return;
+
+    var type = getPremiumHookType();
+    var html = "";
+
+    if (type === "early-access") {
+      html =
+        '<div class="hook-main">' +
+          '<span class="hook-crown" aria-hidden="true">👑</span>' +
+          '<div class="hook-text">' +
+            '<div class="hook-title-row"><strong>Nyangkut Premium</strong><span class="hook-badge">AKSES AWAL</span></div>' +
+            '<small>Kamu sedang menikmati Nyangkut Premium. Semua fitur Premium tersedia selama masa Akses Awal.</small>' +
+          '</div>' +
+          '<a href="#premium-hub" class="hook-cta">Lihat Fitur →</a>' +
+        '</div>';
+    } else if (type === "premium") {
+      html =
+        '<div class="hook-main">' +
+          '<span class="hook-crown" aria-hidden="true">👑</span>' +
+          '<div class="hook-text">' +
+            '<div class="hook-title-row"><strong>Nyangkut Premium</strong><span class="hook-badge hook-badge-active">AKTIF</span></div>' +
+            '<small>Semua fitur Premium kamu di satu tempat.</small>' +
+          '</div>' +
+          '<a href="#premium-hub" class="hook-cta">Buka Premium →</a>' +
+        '</div>';
+    } else if (type === "near-limit") {
+      html =
+        '<div class="hook-main">' +
+          '<span class="hook-crown" aria-hidden="true">👑</span>' +
+          '<div class="hook-text">' +
+            '<div class="hook-title-row"><strong>Catatan kamu mulai banyak</strong></div>' +
+            '<small>Dengan Premium, kamu nggak perlu khawatir batas catatan aktif.</small>' +
+          '</div>' +
+          '<a href="#premium-hub" class="hook-cta">Lihat Premium →</a>' +
+        '</div>';
+    } else if (type === "many-due") {
+      html =
+        '<div class="hook-main">' +
+          '<span class="hook-crown" aria-hidden="true">👑</span>' +
+          '<div class="hook-text">' +
+            '<div class="hook-title-row"><strong>Banyak yang harus dibayar?</strong></div>' +
+            '<small>Atur pengingat H-7, H-3, H-1, Hari H sampai H+1 dengan Premium.</small>' +
+          '</div>' +
+          '<a href="#premium-hub" class="hook-cta">Lihat Premium →</a>' +
+        '</div>';
+    } else if (type === "has-recurring") {
+      html =
+        '<div class="hook-main">' +
+          '<span class="hook-crown" aria-hidden="true">👑</span>' +
+          '<div class="hook-text">' +
+            '<div class="hook-title-row"><strong>Cicilan kamu sudah otomatis</strong></div>' +
+            '<small>Sekarang atur pengingatnya lebih fleksibel dengan Premium.</small>' +
+          '</div>' +
+          '<a href="#premium-hub" class="hook-cta">Lihat Premium →</a>' +
+        '</div>';
+    } else {
+      // Default: full sales card.
+      html =
+        '<div class="hook-main">' +
+          '<span class="hook-crown" aria-hidden="true">👑</span>' +
+          '<div class="hook-text">' +
+            '<div class="hook-title-row"><strong>Nyangkut Premium</strong></div>' +
+            '<small class="hook-tagline">Jangan cuma catat. Urus sampai beres.</small>' +
+          '</div>' +
+          '<a href="#premium-hub" class="hook-cta">Lihat Premium →</a>' +
+        '</div>' +
+        '<ul class="hook-benefits">' +
+          '<li><span aria-hidden="true">🔔</span><span>Pengingat lebih lengkap<small>H-7 · H-3 · H-1 · Hari H · H+1</small></span></li>' +
+          '<li><span aria-hidden="true">🔄</span><span>Catatan Setiap Bulan<small>Cicilan &amp; tagihan otomatis tiap bulan</small></span></li>' +
+          '<li><span aria-hidden="true">∞</span><span>Catatan tanpa batas</span></li>' +
+        '</ul>' +
+        '<div class="hook-price">Rp19.900<span>/bulan</span> <em>atau Rp199.000/tahun</em></div>';
+    }
+
+    inner.innerHTML = html;
+    hook.hidden = false;
+  }
+
+  // ============ Catatan Terbaru (compact, 3-5 items) ============
+  function renderRecentNotes() {
+    var list = document.querySelector("[data-recent-list]");
+    var empty = document.querySelector("[data-recent-empty]");
+    if (!list) return;
+
+    var sorted = sortDebts(allDebts || []);
+    var recent = sorted.slice(0, 5);
+
+    if (recent.length === 0) {
+      list.innerHTML = "";
+      if (empty) empty.hidden = false;
+      return;
+    }
+    if (empty) empty.hidden = true;
+
+    var today = dayStr(new Date());
+    list.innerHTML = recent.map(function (d) {
+      var remaining = d.amount - (d.paid_amount || 0);
+      var avCls = d.direction === "receivable" ? "in" : "out";
+      var initial = (d.person_name || "?").trim().charAt(0).toUpperCase();
+      var dueTxt = d.due_date ? dueLine(d, today) : "";
+      var sisaTxt = d.status === "paid" ? "Lunas" : "Sisa " + rupiah(remaining);
+      return (
+        '<li><a class="tx-item' + (d.status === "paid" ? " is-paid" : "") +
+        '" href="/debt/?id=' + encodeURIComponent(d.id) + '">' +
+          '<span class="tx-avatar ' + avCls + '" aria-hidden="true">' + escapeHtml(initial) + "</span>" +
+          '<span class="tx-body">' +
+            '<span class="tx-top"><span class="tx-name">' + escapeHtml(d.person_name) + '</span><span class="tx-amount">' + rupiah(d.amount) + "</span></span>" +
+            '<span class="tx-sub">' +
+              (dueTxt ? '<span class="tx-due">' + escapeHtml(dueTxt) + "</span>" : "") +
+              '<p class="tx-sisa">' + escapeHtml(sisaTxt) + "</p>" +
+            "</span>" +
+          "</span>" +
+          '<span class="tx-chev" aria-hidden="true">›</span></a></li>'
+      );
+    }).join("");
   }
 
   // Hub: tombol Pengingat Lanjutan -> buka modal Tambah Catatan
@@ -621,6 +815,8 @@
     renderDebts(sortDebts(allDebts));
     renderPeople();
     renderCalendar();
+    renderPremiumHook();
+    renderRecentNotes();
     loadRecurring();
   } catch (err) {
     console.error("[Nyangkut] dashboard gagal memuat:", err);
@@ -874,6 +1070,8 @@
       allRules = [];
     }
     renderRecurring();
+    // Re-render hook: kondisi "punya recurring" baru diketahui setelah allRules terisi.
+    renderPremiumHook();
   }
 
   // Peta rule -> DEBT periode berjalan (Asia/Jakarta, sama seperti generator).

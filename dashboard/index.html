@@ -25,7 +25,7 @@
           <img src="/assets/logo-nyangkut.png?v=2" alt="Nyangkut" />
         </a>
         <nav class="side-nav" aria-label="Menu utama">
-          <a href="#top" class="side-link is-active" data-nav="top">
+          <a href="#" class="side-link is-active" data-nav="dashboard">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             <span>Dashboard</span>
           </a>
@@ -80,7 +80,7 @@
           </header>
 
           <!-- Summary cards -->
-          <section class="cards" id="ringkasan" aria-label="Ringkasan">
+          <section class="cards" id="ringkasan" aria-label="Ringkasan" data-view="dashboard">
             <article class="card">
               <span class="card-icon icon-indigo" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
@@ -115,9 +115,16 @@
             </article>
           </section>
 
+          <!-- Premium Hook (compact sales card) -->
+          <section class="premium-hook" id="premium-hook" aria-label="Nyangkut Premium" data-premium-hook data-view="dashboard" hidden>
+            <div class="hook-inner" data-hook-inner>
+              <!-- Diisi oleh JS: renderPremiumHook() -->
+            </div>
+          </section>
+
           <!-- Calendar + Premium -->
           <div class="duo">
-            <section class="cal-section" id="kalender" aria-label="Kalender kewajiban">
+            <section class="cal-section" id="kalender" aria-label="Kalender kewajiban" data-view="dashboard">
               <div class="cal-head">
                 <div>
                   <h2>Kalender Jatuh Tempo</h2>
@@ -146,7 +153,7 @@
               </div>
             </section>
 
-            <section class="premium-teaser" id="premium" aria-label="Premium segera hadir">
+            <section class="premium-teaser" id="premium" aria-label="Premium segera hadir" data-view="premium">
               <span class="premium-pill">SEGERA HADIR</span>
               <h2>Nyangkut Premium</h2>
               <p class="premium-teaser-sub">Fitur lebih lengkap untuk bantu kamu ngatur uang yang masih nyangkut.</p>
@@ -160,7 +167,7 @@
               <p class="premium-note">Nikmati akses lengkap selama masa awal Nyangkut. Saat Nyangkut Premium resmi tersedia, akun kamu akan otomatis kembali ke paket Free.</p>
             </section>
 
-            <section class="premium-hub" id="premium-hub" aria-label="Nyangkut Premium" hidden>
+            <section class="premium-hub" id="premium-hub" aria-label="Nyangkut Premium" data-view="premium" hidden>
               <div class="hub-head">
                 <span class="hub-icon" aria-hidden="true">👑</span>
                 <div>
@@ -220,8 +227,22 @@
             </section>
           </div>
 
+          <!-- Catatan Terbaru (compact, 3-5 items) -->
+          <section class="recent-section" id="catatan-terbaru" aria-label="Catatan terbaru" data-view="dashboard">
+            <div class="tx-head">
+              <h2>📝 Catatan Terbaru</h2>
+              <a href="#catatan" class="link-btn">Lihat semua →</a>
+            </div>
+            <ul class="tx-list" data-recent-list></ul>
+            <div class="tx-state" data-recent-empty hidden>
+              <p class="tx-state-emoji" aria-hidden="true">🪙</p>
+              <p class="tx-state-title">Belum ada uang yang nyangkut.</p>
+              <button class="btn-primary btn-sm" type="button" data-add>+ Tambah Catatan</button>
+            </div>
+          </section>
+
           <!-- Transactions -->
-          <section class="tx-section" id="catatan" aria-label="Catatan">
+          <section class="tx-section" id="catatan" aria-label="Catatan" data-view="catatan">
             <div class="tx-head">
               <h2>Catatan</h2>
               <button class="btn-primary btn-sm" type="button" data-add>+ Tambah</button>
@@ -278,7 +299,7 @@
           </section>
 
           <!-- People / Orang & Saldo -->
-          <section class="people-section" id="orang" aria-label="Orang dan saldo">
+          <section class="people-section" id="orang" aria-label="Orang dan saldo" data-view="orang">
             <div class="tx-head">
               <div>
                 <h2>Orang &amp; Saldo</h2>
@@ -323,7 +344,7 @@
           </section>
 
           <!-- Recurring rules -->
-          <section class="recur-section" id="berulang" aria-label="Catatan setiap bulan">
+          <section class="recur-section" id="berulang" aria-label="Catatan setiap bulan" data-view="berulang">
             <div class="tx-head">
               <div>
                 <h2>Catatan Setiap Bulan 🔁</h2>
@@ -353,7 +374,7 @@
 
       <!-- ============ BOTTOM NAV (mobile) ============ -->
       <nav class="bottom-nav" aria-label="Navigasi bawah">
-        <a href="#top" class="bn-link is-active" data-nav="top">
+        <a href="#" class="bn-link is-active" data-nav="dashboard">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           <span>Dashboard</span>
         </a>
