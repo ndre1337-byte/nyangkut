@@ -7,6 +7,10 @@
     {
       "path": "/api/recurring/run",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/weekly-digest/run",
+      "schedule": "0 1 * * *"
     }
   ],
   "rewrites": [
