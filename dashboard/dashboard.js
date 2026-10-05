@@ -338,6 +338,112 @@
     hook.hidden = false;
   }
 
+  // ============ Yang Perlu Diperhatikan ============
+  // Priority: 1. Terlambat | 2. Jatuh tempo hari ini | 3. Jatuh tempo terdekat | 4. Partial
+  // Max 3 items. Hanya dari allDebts (RLS-filtered). Paid selalu excluded.
+  function renderAttention() {
+    var list = document.querySelector("[data-attn-list]");
+    var empty = document.querySelector("[data-attn-empty]");
+    var title = document.querySelector("[data-attn-title]");
+    var sub = document.querySelector("[data-attn-sub]");
+    if (!list) return;
+
+    var today = dayStr(new Date());
+    var active = (allDebts || []).filter(function (d) {
+      return d.status !== "paid" && (d.amount - (d.paid_amount || 0)) > 0;
+    });
+
+    // Kategorikan.
+    var overdue = [];
+    var dueToday = [];
+    var upcoming = [];
+    var partial = [];
+
+    active.forEach(function (d) {
+      var remaining = d.amount - (d.paid_amount || 0);
+      if (d.due_date && d.due_date < today) {
+        overdue.push({ debt: d, remaining: remaining, kind: "overdue" });
+      } else if (d.due_date && d.due_date === today) {
+        dueToday.push({ debt: d, remaining: remaining, kind: "today" });
+      } else if (d.due_date && d.due_date > today) {
+        upcoming.push({ debt: d, remaining: remaining, kind: "soon" });
+      } else if (d.status === "partial") {
+        partial.push({ debt: d, remaining: remaining, kind: "partial" });
+      }
+    });
+
+    // Sort: overdue by due_date asc, upcoming by due_date asc.
+    overdue.sort(function (a, b) { return a.debt.due_date < b.debt.due_date ? -1 : 1; });
+    upcoming.sort(function (a, b) { return a.debt.due_date < b.debt.due_date ? -1 : 1; });
+
+    // Gabung dengan priority, max 3.
+    var items = overdue.concat(dueToday, upcoming, partial).slice(0, 3);
+
+    if (items.length === 0) {
+      list.innerHTML = "";
+      if (empty) empty.hidden = false;
+      if (title) title.textContent = "✨ Aman untuk sekarang";
+      if (sub) {
+        // Cek apakah ada upcoming (tidak urgent).
+        var hasUpcoming = active.some(function (d) { return d.due_date && d.due_date > today; });
+        sub.textContent = hasUpcoming
+          ? "Semua pembayaran masih dalam jadwal."
+          : "Nggak ada pembayaran yang terlambat.";
+        sub.hidden = false;
+      }
+      return;
+    }
+
+    if (empty) empty.hidden = true;
+    if (sub) sub.hidden = true;
+
+    // Headline berdasarkan kondisi.
+    if (title) {
+      if (overdue.length > 0) {
+        title.textContent = "🚨 Ada yang perlu ditangani";
+        if (sub) {
+          sub.textContent = overdue.length + " catatan perlu perhatian.";
+          sub.hidden = false;
+        }
+      } else if (dueToday.length > 0) {
+        title.textContent = "🔔 Jatuh tempo hari ini";
+      } else {
+        title.textContent = "🔔 Yang Perlu Diperhatikan";
+      }
+    }
+
+    list.innerHTML = items.map(function (item) {
+      var d = item.debt;
+      var label = "";
+      var dotCls = "";
+
+      if (item.kind === "overdue") {
+        label = "Terlambat · Sisa " + rupiah(item.remaining);
+        dotCls = "is-overdue";
+      } else if (item.kind === "today") {
+        label = "Jatuh tempo hari ini · " + rupiah(d.amount);
+        dotCls = "is-today";
+      } else if (item.kind === "soon") {
+        label = dueLine(d, today) + " · " + rupiah(item.remaining);
+        dotCls = "is-soon";
+      } else if (item.kind === "partial") {
+        label = "Sebagian · Sisa " + rupiah(item.remaining);
+        dotCls = "is-partial";
+      }
+
+      return (
+        '<li><a class="attn-item" href="/debt/?id=' + encodeURIComponent(d.id) + '">' +
+          '<span class="attn-dot ' + dotCls + '" aria-hidden="true"></span>' +
+          '<span class="attn-text">' +
+            '<strong>' + escapeHtml(d.person_name) + "</strong>" +
+            '<small>' + escapeHtml(label) + "</small>" +
+          "</span>" +
+          '<span class="attn-chev" aria-hidden="true">›</span>' +
+        "</a></li>"
+      );
+    }).join("");
+  }
+
   // ============ Catatan Terbaru (compact, 3-5 items) ============
   function renderRecentNotes() {
     var list = document.querySelector("[data-recent-list]");
@@ -816,6 +922,7 @@
     renderPeople();
     renderCalendar();
     renderPremiumHook();
+    renderAttention();
     renderRecentNotes();
     loadRecurring();
   } catch (err) {

@@ -320,7 +320,103 @@ img { max-width: 100%; display: block; }
 }
 
 @media (min-width: 860px) {
-  .duo { grid-template-columns: 1.25fr 1fr; align-items: start; }
+  .duo { grid-template-columns: 1fr 1fr; align-items: start; }
+}
+
+/* ============ Yang Perlu Diperhatikan ============ */
+.attention-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  scroll-margin-top: 20px;
+}
+.attn-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.attn-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.attn-sub {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.attn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.attn-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--ease), transform var(--ease);
+}
+.attn-item:hover {
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+.attn-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.attn-dot.is-overdue { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+.attn-dot.is-today { background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
+.attn-dot.is-soon { background: #3b82f6; box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+.attn-dot.is-partial { background: #8b5cf6; box-shadow: 0 0 8px rgba(139, 92, 246, 0.4); }
+.attn-text { flex: 1; min-width: 0; }
+.attn-text strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.attn-text small {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.attn-chev {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+}
+.attn-empty {
+  text-align: center;
+  padding: 20px 12px;
+}
+.attn-empty-emoji { font-size: 2rem; margin: 0 0 8px; }
+.attn-empty-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.attn-empty-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0;
 }
 
 /* ---------- calendar ---------- */
@@ -970,7 +1066,7 @@ a.hub-card:hover, button.hub-card:hover {
 
 /* ============ Catatan Terbaru (recent) ============ */
 .recent-section {
-  background: var(--card);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 18px;
