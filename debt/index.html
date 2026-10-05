@@ -262,6 +262,24 @@
       </div>
     </div>
 
+    <!-- Lunas Experience: celebration setelah transisi ACTIVE -> PAID.
+         Hanya dipicu dari payment insert yang sukses; bukan dari refresh/reopen. -->
+    <div class="modal-backdrop" data-lunas-modal hidden>
+      <div class="modal modal-confirm lunas-modal" role="dialog" aria-modal="true" aria-labelledby="lunas-title">
+        <div class="sheet-handle modal-handle" aria-hidden="true"></div>
+        <div class="lunas-icon" aria-hidden="true"><span>✓</span></div>
+        <h2 id="lunas-title">🎉 Beres!</h2>
+        <p class="lunas-line" data-lunas-line1>Budi sudah melunasi</p>
+        <p class="lunas-amount" data-lunas-amount>Rp500.000</p>
+        <p class="lunas-line">Catatan ini selesai.</p>
+        <p class="lunas-sub" data-lunas-sub>1 uang yang nyangkut berhasil dibereskan.</p>
+        <div class="form-actions lunas-actions">
+          <button type="button" class="btn-primary" data-lunas-done>Selesai</button>
+          <button type="button" class="btn-ghost" data-lunas-share>Bagikan</button>
+        </div>
+      </div>
+    </div>
+
     <!-- modal konfirmasi hapus catatan -->
     <div class="modal-backdrop" data-debt-del-modal hidden>
       <div class="modal modal-confirm" role="dialog" aria-modal="true" aria-labelledby="debt-del-title">

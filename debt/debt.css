@@ -907,6 +907,49 @@ img.logo-dark { display: none; }
 
 .toast[hidden] { display: none; }
 
+/* ---------- Lunas Experience ---------- */
+.lunas-modal { text-align: center; }
+.lunas-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--success-bg);
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 4px auto 12px;
+  animation: lunas-pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.lunas-icon span {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+}
+@keyframes lunas-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.lunas-modal h2 { margin: 0 0 8px; }
+.lunas-line {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
+}
+.lunas-amount {
+  margin: 8px 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.lunas-sub {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.lunas-actions { margin-top: 20px; }
+
 /* ---------- focus ---------- */
 a:focus-visible,
 button:focus-visible {

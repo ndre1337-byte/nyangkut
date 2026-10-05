@@ -470,8 +470,16 @@
     client.from("payments").insert(payload).then(function (res) {
       if (res.error) throw res.error;
       closePayModal();
-      toast("Pembayaran tercatat.");
-      return load(); // re-fetch: trigger sudah recalc di DB
+      var wasActive = debt.status !== "paid";
+      var finalAmount = amount;
+      return load().then(function () {
+        // Celebration hanya jika ini transisi ACTIVE -> PAID yang baru terjadi.
+        if (wasActive && debt && debt.status === "paid") {
+          showLunasCelebration(finalAmount);
+        } else {
+          toast("Pembayaran tercatat.");
+        }
+      });
     }).catch(function (err) {
       console.error("[Nyangkut] insert payment gagal:", err);
       var msg = String((err && err.message) || "").toLowerCase();
@@ -524,8 +532,15 @@
       if (res.error) throw res.error;
       busy = false;
       closePaidModal();
-      toast("Lunas! Catatan selesai. 🎉");
-      return load();
+      var wasActive = debt.status !== "paid";
+      var finalAmount = remaining();
+      return load().then(function () {
+        if (wasActive && debt && debt.status === "paid") {
+          showLunasCelebration(finalAmount);
+        } else {
+          toast("Lunas! Catatan selesai. 🎉");
+        }
+      });
     }).catch(function (err) {
       console.error("[Nyangkut] tandai lunas gagal:", err);
       busy = false;
@@ -533,6 +548,79 @@
       toast("Gagal menyimpan. Coba lagi ya.");
     });
   });
+
+  // ---------- Lunas Experience ----------
+  // Celebration HANYA untuk transisi ACTIVE -> PAID yang baru saja terjadi
+  // lewat payment insert yang sukses. Status diambil dari DB setelah
+  // load() (trigger recalc), bukan dari kalkulasi frontend.
+  var lunasModal = document.querySelector("[data-lunas-modal]");
+  var lunasAmount = 0; // nominal pembayaran terakhir yang membuat lunas
+
+  function showLunasCelebration(finalAmount) {
+    if (!lunasModal || !debt) return;
+    lunasAmount = Number(finalAmount) || 0;
+    var isRecv = debt.direction === "receivable";
+    var name = debt.person_name || "";
+    var line1 = document.querySelector("[data-lunas-line1]");
+    var sub = document.querySelector("[data-lunas-sub]");
+    if (line1) {
+      line1.textContent = isRecv
+        ? name + " sudah melunasi"
+        : "Utang kamu ke " + name + " sudah lunas";
+    }
+    if (sub) {
+      sub.textContent = isRecv
+        ? "1 uang yang nyangkut berhasil dibereskan."
+        : "1 catatan berhasil dibereskan.";
+    }
+    var amtEl = document.querySelector("[data-lunas-amount]");
+    if (amtEl) amtEl.textContent = rupiah(lunasAmount);
+    showModal(lunasModal);
+    lockScroll(true);
+    // Putar ulang animasi pop setiap kali muncul.
+    var icon = lunasModal.querySelector(".lunas-icon");
+    if (icon) {
+      icon.style.animation = "none";
+      void icon.offsetWidth;
+      icon.style.animation = "";
+    }
+    setTimeout(function () {
+      var btn = lunasModal.querySelector("[data-lunas-done]");
+      if (btn) btn.focus();
+    }, 50);
+  }
+
+  function closeLunasModal() {
+    if (!lunasModal) return;
+    hideModal(lunasModal);
+    lockScroll(false);
+  }
+
+  function shareLunas() {
+    if (!debt) return;
+    var amt = rupiah(lunasAmount);
+    var msg = debt.direction === "receivable"
+      ? "🎉 Beres! Catatan " + amt + " dengan " + debt.person_name + " sudah lunas di Nyangkut. 🙌"
+      : "🎉 Beres! Catatan utang " + amt + " ke " + debt.person_name + " sudah lunas di Nyangkut. 🙌";
+    // Celebration share: client-side, tanpa nomor tersimpan,
+    // tanpa quota WA Tagih. User yang tekan Send sendiri.
+    window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank", "noopener");
+  }
+
+  document.querySelectorAll("[data-lunas-done]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      closeLunasModal();
+      window.location.href = "/dashboard/";
+    });
+  });
+  document.querySelectorAll("[data-lunas-share]").forEach(function (b) {
+    b.addEventListener("click", shareLunas);
+  });
+  if (lunasModal) {
+    lunasModal.addEventListener("click", function (e) {
+      if (e.target === lunasModal) closeLunasModal();
+    });
+  }
 
   // ---------- modal konfirmasi hapus catatan ----------
   var debtDelModal = document.querySelector("[data-debt-del-modal]");
@@ -607,6 +695,7 @@
       if (!paidModal.hidden) closePaidModal();
       if (!debtDelModal.hidden) closeDebtDelModal();
       if (waModal && !waModal.hidden) closeWaModal();
+      if (lunasModal && !lunasModal.hidden) closeLunasModal();
     }
   });
 
