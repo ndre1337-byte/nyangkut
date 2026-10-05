@@ -135,6 +135,63 @@
     return debts.filter(function (d) { return d.status !== "paid"; }).length;
   }
 
+  // ---------- Premium Navigation ----------
+  // Menu sheet + Premium Hub dikonfigurasi berdasarkan hasPremiumAccess().
+  // Free: teaser #premium. Premium/Early Access: hub #premium-hub.
+  function setupPremiumNav() {
+    var premium = hasPremiumAccess(userProfile);
+    var teaser = document.getElementById("premium");
+    var hub = document.getElementById("premium-hub");
+
+    if (premium) {
+      if (teaser) teaser.hidden = true;
+      if (hub) hub.hidden = false;
+    } else {
+      if (teaser) teaser.hidden = false;
+      if (hub) hub.hidden = true;
+    }
+
+    // Menu sheet (mobile): update link premium.
+    var menuPremium = document.querySelector("[data-menu-premium]");
+    if (menuPremium) {
+      var titleEl = menuPremium.querySelector("[data-menu-premium-title]");
+      var subEl = menuPremium.querySelector("[data-menu-premium-sub]");
+      if (premium) {
+        menuPremium.setAttribute("href", "#premium-hub");
+        if (titleEl) titleEl.textContent = "Nyangkut Premium";
+        if (subEl) subEl.textContent = "Aktif";
+      } else {
+        menuPremium.setAttribute("href", "#premium");
+        if (titleEl) titleEl.textContent = "Premium";
+        if (subEl) subEl.textContent = "Segera hadir";
+      }
+    }
+
+    // Sidebar desktop: bedakan label premium.
+    var sidePremium = document.querySelector(".side-premium");
+    if (sidePremium) {
+      var labelEl = sidePremium.querySelector(".segera-label");
+      if (premium) {
+        sidePremium.setAttribute("href", "#premium-hub");
+        if (labelEl) {
+          labelEl.textContent = "AKTIF";
+          labelEl.classList.add("aktif-label");
+        }
+      } else {
+        sidePremium.setAttribute("href", "#premium");
+      }
+    }
+  }
+
+  // Hub: tombol Pengingat Lanjutan -> buka modal Tambah Catatan
+  // (tempat user mengatur Advanced Reminder).
+  document.querySelectorAll("[data-hub-reminder]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var addBtn = document.querySelector("[data-add]");
+      if (addBtn) addBtn.click();
+    });
+  });
+
   // Urut: yang belum lunas dulu berdasarkan jatuh tempo terdekat
   // (tanpa jatuh tempo di belakang), yang sudah lunas paling bawah.
   function sortDebts(list) {
@@ -551,6 +608,7 @@
       hasReminderCols = !remProbe.error;
     } catch (e) { hasReminderCols = false; }
     setupReminderUI();
+    setupPremiumNav();
 
     // RLS otomatis membatasi hanya baris milik user ini.
     var res = await client
@@ -561,6 +619,7 @@
 
     allDebts = res.data || [];
     renderDebts(sortDebts(allDebts));
+    renderPeople();
     renderCalendar();
     loadRecurring();
   } catch (err) {
@@ -1487,13 +1546,464 @@
   var retry = document.querySelector("[data-retry]");
   if (retry) retry.addEventListener("click", load);
 
+  // ============ Orang & Saldo ============
+  // Agregasi client-side dari allDebts (sudah RLS-filtered di load()).
+  // Tidak ada query baru, tidak ada table baru, tidak ada balance yang disimpan.
+  // Source of truth tetap debts.amount / debts.paid_amount / payments.
+
+  function normalizePersonKey(name) {
+    return String(name || "").trim().toLowerCase();
+  }
+
+  function personRemaining(d) {
+    return Number(d.amount) - Number(d.paid_amount);
+  }
+
+  function personIsOverdue(d, today) {
+    return !!(d.due_date && d.due_date < today && d.status !== "paid");
+  }
+
+  function buildPeople(debts) {
+    var today = dayStr(new Date());
+    var map = {};
+    debts.forEach(function (d) {
+      var key = normalizePersonKey(d.person_name);
+      if (!key) return;
+      if (!map[key]) {
+        map[key] = {
+          key: key,
+          displayName: String(d.person_name).trim(),
+          debts: [],
+          receivableActive: 0,
+          payableActive: 0,
+          activeCount: 0,
+          overdueCount: 0,
+          hasHistory: false,
+        };
+      }
+      var p = map[key];
+      p.debts.push(d);
+      var rem = personRemaining(d);
+      if (rem > 0) {
+        if (d.direction === "receivable") p.receivableActive += rem;
+        else p.payableActive += rem;
+        p.activeCount++;
+        if (personIsOverdue(d, today)) p.overdueCount++;
+      } else {
+        p.hasHistory = true;
+      }
+    });
+    var list = Object.keys(map).map(function (k) { return map[k]; });
+    // Urut: yang punya saldo aktif dulu (total terbesar), lalu nama A-Z.
+    // Orang yang semua transaksinya lunas tetap muncul di bawah (history tersedia).
+    list.sort(function (a, b) {
+      var ta = a.receivableActive + a.payableActive;
+      var tb = b.receivableActive + b.payableActive;
+      var aa = ta > 0 ? 0 : 1;
+      var ab = tb > 0 ? 0 : 1;
+      if (aa !== ab) return aa - ab;
+      if (ta !== tb) return tb - ta;
+      return a.displayName.localeCompare(b.displayName, "id");
+    });
+    return list;
+  }
+
+  var peopleCache = [];
+  var peopleEls = {
+    summary: document.querySelector("[data-people-summary]"),
+    count: document.querySelector("[data-people-count]"),
+    inEl: document.querySelector("[data-people-in]"),
+    outEl: document.querySelector("[data-people-out]"),
+    searchWrap: document.querySelector("[data-people-search-wrap]"),
+    search: document.querySelector("[data-people-search]"),
+    empty: document.querySelector("[data-people-empty]"),
+    noResult: document.querySelector("[data-people-no-result]"),
+    list: document.querySelector("[data-people-list]"),
+  };
+
+  function escHtml(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function personBalanceHTML(p) {
+    var parts = [];
+    if (p.receivableActive > 0) {
+      parts.push('Kamu harus menerima <span class="bal-in">' + rupiah(p.receivableActive) + "</span>");
+    }
+    if (p.payableActive > 0) {
+      parts.push('Kamu harus bayar <span class="bal-out">' + rupiah(p.payableActive) + "</span>");
+    }
+    if (!parts.length) return '<span class="person-meta">Tidak ada saldo aktif</span>';
+    return parts.join("<br>");
+  }
+
+  function personMetaHTML(p) {
+    var bits = [];
+    if (p.activeCount > 0) {
+      bits.push(p.activeCount + " catatan" + (p.overdueCount > 0 ? ' · <span class="overdue-tag">' + p.overdueCount + " terlambat</span>" : ""));
+    } else {
+      bits.push("Riwayat tersedia");
+    }
+    return bits.join("");
+  }
+
+  function renderPeople() {
+    if (!peopleEls.list) return;
+    peopleCache = buildPeople(allDebts);
+    var q = peopleEls.search ? normalizePersonKey(peopleEls.search.value) : "";
+    var filtered = q
+      ? peopleCache.filter(function (p) { return p.key.indexOf(q) !== -1; })
+      : peopleCache;
+
+    var hasAny = peopleCache.length > 0;
+    // Summary: hanya dari orang aktif (ada saldo > 0).
+    var active = peopleCache.filter(function (p) {
+      return p.receivableActive + p.payableActive > 0;
+    });
+    if (peopleEls.summary) peopleEls.summary.hidden = !hasAny;
+    if (peopleEls.searchWrap) peopleEls.searchWrap.hidden = !hasAny;
+    if (peopleEls.empty) peopleEls.empty.hidden = hasAny;
+    if (peopleEls.noResult) peopleEls.noResult.hidden = !(hasAny && filtered.length === 0);
+
+    if (hasAny && peopleEls.count) {
+      peopleEls.count.textContent = active.length;
+      peopleEls.inEl.textContent = rupiah(active.reduce(function (a, p) { return a + p.receivableActive; }, 0));
+      peopleEls.outEl.textContent = rupiah(active.reduce(function (a, p) { return a + p.payableActive; }, 0));
+    }
+
+    peopleEls.list.innerHTML = filtered.map(function (p) {
+      var initial = (p.displayName.trim().charAt(0) || "?").toUpperCase();
+      return (
+        '<li><button type="button" class="person-card" data-person-key="' + escHtml(p.key) + '">' +
+        '<span class="person-avatar" aria-hidden="true">' + escHtml(initial) + "</span>" +
+        '<span class="person-body">' +
+        '<span class="person-name">' + escHtml(p.displayName) + "</span>" +
+        '<span class="person-balance">' + personBalanceHTML(p) + "</span>" +
+        '<span class="person-meta">' + personMetaHTML(p) + "</span>" +
+        "</span>" +
+        '<span class="person-chevron" aria-hidden="true">›</span>' +
+        "</button></li>"
+      );
+    }).join("");
+
+    peopleEls.list.querySelectorAll("[data-person-key]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        openPersonDetail(btn.getAttribute("data-person-key"));
+      });
+    });
+  }
+
+  if (peopleEls.search) {
+    peopleEls.search.addEventListener("input", function () {
+      renderPeople();
+    });
+  }
+
+  // ---------- Person detail sheet ----------
+  var personSheet = document.querySelector("[data-person-sheet]");
+  var personBackdrop = document.querySelector("[data-person-backdrop]");
+
+  function showSheet(sheet, backdrop) {
+    if (!sheet) return;
+    sheet.hidden = false;
+    requestAnimationFrame(function () {
+      sheet.classList.add("show");
+      if (backdrop) {
+        backdrop.hidden = false;
+        requestAnimationFrame(function () { backdrop.classList.add("show"); });
+      }
+    });
+    document.body.style.overflow = "hidden";
+  }
+  function hideSheet(sheet, backdrop) {
+    if (!sheet) return;
+    sheet.classList.remove("show");
+    if (backdrop) backdrop.classList.remove("show");
+    setTimeout(function () {
+      sheet.hidden = true;
+      if (backdrop) backdrop.hidden = true;
+      // Jangan paksa unlock kalau modal lain masih terbuka.
+      if (!document.querySelector(".sheet.show") && !document.querySelector(".modal-backdrop.show")) {
+        document.body.style.overflow = "";
+      }
+    }, 200);
+  }
+
+  function openPersonDetail(key) {
+    var p = null;
+    for (var i = 0; i < peopleCache.length; i++) {
+      if (peopleCache[i].key === key) { p = peopleCache[i]; break; }
+    }
+    if (!p || !personSheet) return;
+
+    var avEl = personSheet.querySelector("[data-person-avatar]");
+    if (avEl) avEl.textContent = (p.displayName.trim().charAt(0) || "?").toUpperCase();
+    var nameEl = personSheet.querySelector("[data-person-name]");
+    if (nameEl) nameEl.textContent = p.displayName;
+    var metaEl = personSheet.querySelector("[data-person-meta]");
+    if (metaEl) metaEl.innerHTML = personMetaHTML(p);
+
+    var body = personSheet.querySelector("[data-person-body]");
+    if (body) {
+      var today = dayStr(new Date());
+      var html = "";
+
+      // Blok saldo: tampilkan kedua sisi secara transparan (tanpa netting).
+      if (p.receivableActive > 0) {
+        html += '<div class="person-bal-block">' +
+          '<p class="person-bal-label">' + escHtml(p.displayName) + " masih harus bayar kamu</p>" +
+          '<p class="person-bal-value bal-in">' + rupiah(p.receivableActive) + "</p>" +
+          "</div>";
+      }
+      if (p.payableActive > 0) {
+        html += '<div class="person-bal-block">' +
+          '<p class="person-bal-label">Kamu masih harus bayar ' + escHtml(p.displayName) + "</p>" +
+          '<p class="person-bal-value bal-out">' + rupiah(p.payableActive) + "</p>" +
+          "</div>";
+      }
+      if (p.receivableActive + p.payableActive === 0) {
+        html += '<div class="person-bal-block">' +
+          '<p class="person-bal-label">Tidak ada saldo aktif</p>' +
+          '<p class="person-bal-sub">Semua catatan dengan ' + escHtml(p.displayName) + " sudah lunas. Riwayat tetap tersedia di bawah.</p>" +
+          "</div>";
+      }
+
+      // Catatan aktif (ada sisa).
+      var activeDebts = p.debts.filter(function (d) { return personRemaining(d) > 0; });
+      // Urut: jatuh tempo terdekat dulu.
+      activeDebts.sort(function (a, b) {
+        if (a.due_date && b.due_date) return a.due_date < b.due_date ? -1 : 1;
+        if (a.due_date) return -1;
+        if (b.due_date) return 1;
+        return 0;
+      });
+      html += '<h4 class="person-sec-title">Catatan aktif</h4>';
+      if (activeDebts.length) {
+        html += '<ul class="person-note-list">';
+        activeDebts.forEach(function (d) {
+          var rem = personRemaining(d);
+          var isRecv = d.direction === "receivable";
+          var overdue = personIsOverdue(d, today);
+          var noteName = d.note ? d.note : (isRecv ? "Uang yang harus balik ke kamu" : "Uang yang harus kamu bayar");
+          html += '<li class="person-note">' +
+            '<div class="person-note-info">' +
+            '<p class="person-note-name">' + escHtml(noteName) + "</p>" +
+            '<p class="person-note-amounts">Total <strong>' + rupiah(d.amount) + "</strong>" +
+            " · Sisa <strong>" + rupiah(rem) + "</strong>" +
+            (d.due_date ? " · " + escHtml(fmtDue(d.due_date)) : "") +
+            (overdue ? ' · <span class="overdue-tag">Terlambat</span>' : "") +
+            "</p></div>" +
+            '<div class="person-note-actions">' +
+            (isRecv ? '<button type="button" class="wa-mini-btn" data-wa-for="' + d.id + '" aria-label="Ingatkan via WhatsApp">💬</button>' : "") +
+            '<a class="person-note-link" href="/debt/?id=' + d.id + '" aria-label="Lihat detail catatan">›</a>' +
+            "</div></li>";
+        });
+        html += "</ul>";
+      } else {
+        html += '<p class="person-empty-note">Tidak ada catatan aktif.</p>';
+      }
+
+      // Riwayat (lunas).
+      var paidDebts = p.debts.filter(function (d) { return personRemaining(d) <= 0; });
+      if (paidDebts.length) {
+        html += '<h4 class="person-sec-title">Riwayat</h4><ul class="person-note-list">';
+        paidDebts.forEach(function (d) {
+          var noteName = d.note ? d.note : (d.direction === "receivable" ? "Uang yang harus balik ke kamu" : "Uang yang harus kamu bayar");
+          html += '<li class="person-note is-paid">' +
+            '<div class="person-note-info">' +
+            '<p class="person-note-name">' + escHtml(noteName) + "</p>" +
+            '<p class="person-note-amounts"><strong>' + rupiah(d.amount) + "</strong> · Lunas ✓</p></div>" +
+            '<div class="person-note-actions">' +
+            '<a class="person-note-link" href="/debt/?id=' + d.id + '" aria-label="Lihat detail catatan">›</a>' +
+            "</div></li>";
+        });
+        html += "</ul>";
+      }
+
+      body.innerHTML = html;
+
+      // Wire WA buttons (per-note, reuse flow yang sama).
+      body.querySelectorAll("[data-wa-for]").forEach(function (btn) {
+        btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var debtId = btn.getAttribute("data-wa-for");
+          var debt = null;
+          for (var j = 0; j < allDebts.length; j++) {
+            if (allDebts[j].id === debtId) { debt = allDebts[j]; break; }
+          }
+          if (debt) openWaModalFor(debt);
+        });
+      });
+    }
+
+    showSheet(personSheet, personBackdrop);
+  }
+
+  function closePersonDetail() {
+    hideSheet(personSheet, personBackdrop);
+  }
+
+  document.querySelectorAll("[data-person-close]").forEach(function (b) {
+    b.addEventListener("click", closePersonDetail);
+  });
+  if (personBackdrop) {
+    personBackdrop.addEventListener("click", closePersonDetail);
+  }
+
+  // ---------- WA Tagih (port dari debt page, per-note) ----------
+  // Logic sama persis: modal input nomor -> preview -> wa.me -> user tekan Send.
+  // Rate limit 10x/hari/akun tetap berlaku. Nomor tidak pernah disimpan.
+  var WA_DAILY_LIMIT = 10;
+  var waModal = document.querySelector("[data-wa-modal]");
+  var waForm = document.querySelector("[data-wa-form]");
+  var waPhone = document.getElementById("wa-phone");
+  var waError = document.querySelector("[data-wa-error]");
+  var waTargetDebt = null;
+
+  function waDayStartWIB() {
+    // Awal hari ini dalam WIB sebagai ISO string.
+    var now = new Date();
+    var wib = new Date(now.getTime() + (7 * 60 + now.getTimezoneOffset()) * 60000);
+    wib.setHours(0, 0, 0, 0);
+    return new Date(wib.getTime() - (7 * 60 + now.getTimezoneOffset()) * 60000).toISOString();
+  }
+
+  async function getWaUsageToday() {
+    try {
+      var c = await waitForClient();
+      var res = await c.from("wa_reminder_usage")
+        .select("id", { count: "exact", head: true })
+        .gte("used_at", waDayStartWIB());
+      if (res.error) throw res.error;
+      return res.count || 0;
+    } catch (e) {
+      console.warn("[Nyangkut] WA rate limit check gagal:", e);
+      return 0; // fail-open
+    }
+  }
+
+  async function logWaUsage() {
+    try {
+      var c = await waitForClient();
+      var session = await c.auth.getSession();
+      var uid = session && session.data && session.data.session && session.data.session.user
+        ? session.data.session.user.id : null;
+      if (!uid) return;
+      await c.from("wa_reminder_usage").insert({ user_id: uid });
+    } catch (e) {
+      console.warn("[Nyangkut] WA usage log gagal:", e);
+    }
+  }
+
+  function normalizeWaNumber(input) {
+    var digits = String(input || "").replace(/\D/g, "");
+    if (digits.startsWith("62")) {
+      // sudah format internasional
+    } else if (digits.startsWith("0")) {
+      digits = "62" + digits.slice(1);
+    } else if (digits.startsWith("8")) {
+      digits = "62" + digits;
+    } else {
+      return null;
+    }
+    if (!/^628\d{8,11}$/.test(digits)) return null;
+    return digits;
+  }
+
+  function fmtDateLong(iso) {
+    if (!iso) return "";
+    var p = String(iso).slice(0, 10).split("-");
+    if (p.length !== 3) return String(iso);
+    return parseInt(p[2], 10) + " " + MONTHS[parseInt(p[1], 10) - 1] + " " + p[0];
+  }
+
+  function buildWaMessageFor(debt) {
+    var rem = personRemaining(debt);
+    var amountStr = rupiah(rem);
+    var isPartial = debt.status === "partial" && Number(debt.paid_amount) > 0;
+    var amountWord = isPartial ? "sisa " + amountStr : "uang " + amountStr;
+    var body;
+    if (debt.due_date) {
+      body = "mau ingetin soal " + amountWord + " yang jatuh tempo " + fmtDateLong(debt.due_date) + " ya.";
+    } else {
+      body = "mau ingetin soal " + amountWord + " yang kemarin ya.";
+    }
+    return "Hai " + debt.person_name + ", " + body + " Kalau sudah sempat, boleh dibalikin. Makasih 🙏";
+  }
+
+  function openWaModalFor(debt) {
+    if (!debt || debt.direction !== "receivable" || debt.status === "paid") return;
+    if (personRemaining(debt) <= 0) return;
+    waTargetDebt = debt;
+    if (waForm) waForm.reset();
+    if (waError) waError.hidden = true;
+    var preview = document.querySelector("[data-wa-preview]");
+    if (preview) preview.textContent = buildWaMessageFor(debt);
+    if (waModal) {
+      waModal.hidden = false;
+      requestAnimationFrame(function () { waModal.classList.add("show"); });
+    }
+    document.body.style.overflow = "hidden";
+    setTimeout(function () { if (waPhone) waPhone.focus(); }, 50);
+  }
+
+  function closeWaModal() {
+    if (!waModal) return;
+    waModal.classList.remove("show");
+    setTimeout(function () {
+      waModal.hidden = true;
+      if (!document.querySelector(".sheet.show")) document.body.style.overflow = "";
+    }, 200);
+    waTargetDebt = null;
+  }
+
+  document.querySelectorAll("[data-wa-close]").forEach(function (b) {
+    b.addEventListener("click", closeWaModal);
+  });
+  if (waModal) {
+    waModal.addEventListener("click", function (e) {
+      if (e.target === waModal) closeWaModal();
+    });
+  }
+  if (waForm) {
+    waForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      if (!waTargetDebt) return;
+      var normalized = normalizeWaNumber(waPhone.value);
+      if (!normalized) {
+        waError.textContent = "Nomor WhatsApp belum valid.";
+        waError.hidden = false;
+        waPhone.focus();
+        return;
+      }
+      waError.hidden = true;
+      var used = await getWaUsageToday();
+      if (used >= WA_DAILY_LIMIT) {
+        waError.textContent = "Kamu sudah mencapai batas 10 pengingat WhatsApp hari ini. Coba lagi besok ya.";
+        waError.hidden = false;
+        return;
+      }
+      logWaUsage();
+      var url = "https://wa.me/" + normalized + "?text=" + encodeURIComponent(buildWaMessageFor(waTargetDebt));
+      closeWaModal();
+      window.open(url, "_blank", "noopener");
+    });
+    waPhone.addEventListener("input", function () {
+      waError.hidden = true;
+    });
+  }
+
   // ---------- navigasi: sidebar + bottom nav ----------
   (function initNav() {
   var links = Array.prototype.slice.call(document.querySelectorAll("[data-nav]"));
   if (!links.length) return;
 
   // Scroll-spy sederhana: tandai link aktif berdasarkan posisi section.
-  var sections = ["top", "catatan", "kalender", "berulang", "premium"].map(function (id) {
+  // Visibility dicek saat scroll (bukan saat init) karena #premium vs
+  // #premium-hub ditukar setelah userProfile dimuat.
+  var sections = ["top", "catatan", "orang", "kalender", "berulang", "premium", "premium-hub"].map(function (id) {
     return { id: id, el: document.getElementById(id) };
   }).filter(function (s) { return s.el; });
 
@@ -1512,7 +2022,7 @@
       var y = window.scrollY + 120;
       var current = "top";
       sections.forEach(function (s) {
-        if (s.el.offsetTop <= y) current = s.id;
+        if (!s.el.hidden && s.el.offsetTop <= y) current = s.id;
       });
       setActive(current);
     });

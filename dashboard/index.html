@@ -41,6 +41,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
             <span>Setiap Bulan</span>
           </a>
+          <a href="#orang" class="side-link" data-nav="orang">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Orang</span>
+          </a>
         </nav>
         <div class="side-secondary" aria-label="Menu lainnya">
           <a href="#premium" class="side-link side-premium" data-nav="premium">
@@ -155,6 +159,65 @@
               </ul>
               <p class="premium-note">Nikmati akses lengkap selama masa awal Nyangkut. Saat Nyangkut Premium resmi tersedia, akun kamu akan otomatis kembali ke paket Free.</p>
             </section>
+
+            <section class="premium-hub" id="premium-hub" aria-label="Nyangkut Premium" hidden>
+              <div class="hub-head">
+                <span class="hub-icon" aria-hidden="true">✨</span>
+                <div>
+                  <h2>Nyangkut Premium</h2>
+                  <span class="premium-pill premium-pill-active">AKTIF</span>
+                </div>
+              </div>
+              <p class="hub-sub">Semua fitur premium kamu di satu tempat.</p>
+
+              <h3 class="hub-sec-title">Fitur Premium Kamu</h3>
+              <div class="hub-features">
+                <button type="button" class="hub-card" data-hub-reminder>
+                  <span class="hub-emoji" aria-hidden="true">🔔</span>
+                  <span class="hub-text">
+                    <strong>Pengingat Lanjutan</strong>
+                    <small>Atur pengingat H-7, H-3, H-1, Hari H, dan H+1.</small>
+                  </span>
+                  <span class="hub-status">Aktif</span>
+                </button>
+                <a href="#berulang" class="hub-card" data-hub-recurring>
+                  <span class="hub-emoji" aria-hidden="true">🔄</span>
+                  <span class="hub-text">
+                    <strong>Catatan Setiap Bulan</strong>
+                    <small>Cicilan &amp; tagihan yang muncul otomatis tiap bulan.</small>
+                  </span>
+                  <span class="hub-status">Aktif</span>
+                </a>
+              </div>
+
+              <h3 class="hub-sec-title">Segera Hadir</h3>
+              <div class="hub-features">
+                <div class="hub-card is-future">
+                  <span class="hub-emoji" aria-hidden="true">📊</span>
+                  <span class="hub-text">
+                    <strong>Insight Keuangan</strong>
+                    <small>Pahami pola uang kamu yang masih nyangkut.</small>
+                  </span>
+                  <span class="hub-status-future">Segera hadir</span>
+                </div>
+                <div class="hub-card is-future">
+                  <span class="hub-emoji" aria-hidden="true">📁</span>
+                  <span class="hub-text">
+                    <strong>Export Data</strong>
+                    <small>Unduh semua catatan kamu.</small>
+                  </span>
+                  <span class="hub-status-future">Segera hadir</span>
+                </div>
+                <div class="hub-card is-future">
+                  <span class="hub-emoji" aria-hidden="true">♾️</span>
+                  <span class="hub-text">
+                    <strong>Transaksi Lebih Banyak</strong>
+                    <small>Tanpa batas catatan aktif.</small>
+                  </span>
+                  <span class="hub-status-future">Segera hadir</span>
+                </div>
+              </div>
+            </section>
           </div>
 
           <!-- Transactions -->
@@ -214,6 +277,51 @@
             <ul class="tx-list" data-tx-list hidden></ul>
           </section>
 
+          <!-- People / Orang & Saldo -->
+          <section class="people-section" id="orang" aria-label="Orang dan saldo">
+            <div class="tx-head">
+              <div>
+                <h2>Orang &amp; Saldo</h2>
+                <p class="recur-sub">Lihat uang yang masih nyangkut dengan tiap orang.</p>
+              </div>
+            </div>
+
+            <div class="people-summary" data-people-summary hidden>
+              <div class="people-sum-item">
+                <strong data-people-count>0</strong>
+                <span>orang aktif</span>
+              </div>
+              <div class="people-sum-item">
+                <strong class="people-in" data-people-in>Rp0</strong>
+                <span>masih harus kamu terima</span>
+              </div>
+              <div class="people-sum-item">
+                <strong class="people-out" data-people-out>Rp0</strong>
+                <span>masih harus kamu bayar</span>
+              </div>
+            </div>
+
+            <div class="people-search" data-people-search-wrap hidden>
+              <span class="sf-search-icon" aria-hidden="true">🔎</span>
+              <input type="search" data-people-search placeholder="Cari nama…" autocomplete="off" aria-label="Cari orang" />
+            </div>
+
+            <div class="tx-state" data-people-empty hidden>
+              <p class="tx-state-emoji" aria-hidden="true">👥</p>
+              <p class="tx-state-title">Belum ada orang yang tercatat.</p>
+              <p class="tx-state-sub">Catat dulu supaya nggak lupa.</p>
+              <button class="btn-primary" type="button" data-add>+ Tambah Catatan</button>
+            </div>
+
+            <div class="tx-state" data-people-no-result hidden>
+              <p class="tx-state-emoji" aria-hidden="true">🔍</p>
+              <p class="tx-state-title">Orang nggak ketemu.</p>
+              <p class="tx-state-sub">Coba kata kunci lain.</p>
+            </div>
+
+            <ul class="people-list" data-people-list></ul>
+          </section>
+
           <!-- Recurring rules -->
           <section class="recur-section" id="berulang" aria-label="Catatan setiap bulan">
             <div class="tx-head">
@@ -253,33 +361,32 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           <span>Catatan</span>
         </a>
-        <a href="#kalender" class="bn-link" data-nav="kalender">
+        <a href="#kalender" class="bn-link" data-nav="kalender" aria-label="Kalender">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Kalender</span>
         </a>
-        <button class="bn-link" type="button" data-more-open aria-label="Menu lainnya" aria-haspopup="dialog">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-          <span>Lainnya</span>
+        <a href="#orang" class="bn-link" data-nav="orang" aria-label="Orang dan saldo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span>Orang</span>
+        </a>
+        <button class="bn-link" type="button" data-more-open aria-label="Buka menu" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+          <span>Menu</span>
         </button>
       </nav>
 
-      <!-- ============ MORE SHEET (mobile) ============ -->
+      <!-- ============ MENU SHEET (mobile) ============ -->
       <div class="sheet-backdrop" data-more-backdrop hidden></div>
-      <div class="sheet" role="dialog" aria-modal="true" aria-label="Menu lainnya" data-more-sheet hidden>
+      <div class="sheet" role="dialog" aria-modal="true" aria-label="Menu" data-more-sheet hidden>
         <div class="sheet-handle" aria-hidden="true"></div>
-        <a href="#premium" class="sheet-link" data-more-link>
-          <span class="sheet-icon" aria-hidden="true">✦</span>
-          <span class="sheet-text"><strong>Nyangkut Premium</strong><small>Segera hadir</small></span>
+        <a href="#premium" class="sheet-link" data-more-link data-menu-premium>
+          <span class="sheet-icon" aria-hidden="true">✨</span>
+          <span class="sheet-text"><strong data-menu-premium-title>Premium</strong><small data-menu-premium-sub>Segera hadir</small></span>
           <span aria-hidden="true">→</span>
         </a>
         <a href="https://www.nyangkut.id/" class="sheet-link" data-more-link>
-          <span class="sheet-icon" aria-hidden="true">⌂</span>
+          <span class="sheet-icon" aria-hidden="true">ℹ️</span>
           <span class="sheet-text"><strong>Tentang Nyangkut</strong><small>nyangkut.id</small></span>
-          <span aria-hidden="true">→</span>
-        </a>
-        <a href="#berulang" class="sheet-link" data-more-link>
-          <span class="sheet-icon" aria-hidden="true">🔁</span>
-          <span class="sheet-text"><strong>Catatan Setiap Bulan</strong><small>Cicilan tiap bulan</small></span>
           <span aria-hidden="true">→</span>
         </a>
         <button class="sheet-link sheet-danger" type="button" data-sign-out>
@@ -428,6 +535,48 @@
             <button type="submit" class="btn-primary" data-submit>
               <span data-button-label>Simpan Catatan</span>
             </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ============ PERSON DETAIL SHEET ============ -->
+    <div class="sheet-backdrop" data-person-backdrop hidden></div>
+    <div class="sheet sheet-person" role="dialog" aria-modal="true" aria-label="Detail orang" data-person-sheet hidden>
+      <div class="sheet-handle" aria-hidden="true"></div>
+      <div class="person-detail-head">
+        <span class="person-avatar person-avatar-lg" data-person-avatar aria-hidden="true">?</span>
+        <div class="person-detail-title">
+          <h3 data-person-name>—</h3>
+          <p data-person-meta></p>
+        </div>
+        <button class="btn-icon" type="button" data-person-close aria-label="Tutup">✕</button>
+      </div>
+      <div class="person-detail-body" data-person-body></div>
+    </div>
+
+    <!-- ============ WA TAGIH MODAL ============ -->
+    <div class="modal-backdrop" data-wa-modal hidden>
+      <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="wa-modal-title">
+        <div class="sheet-handle modal-handle" aria-hidden="true"></div>
+        <div class="form-head">
+          <h2 id="wa-modal-title">Ingatkan via WhatsApp</h2>
+          <button class="btn-icon" type="button" data-wa-close aria-label="Tutup">✕</button>
+        </div>
+        <div class="wa-preview-wrap" data-wa-preview-wrap>
+          <p class="field-label">Preview pesan</p>
+          <p class="wa-preview" data-wa-preview></p>
+        </div>
+        <form data-wa-form novalidate>
+          <p class="form-error" data-wa-error hidden></p>
+          <div class="field">
+            <label class="field-label" for="wa-phone">Nomor WhatsApp tujuan</label>
+            <input id="wa-phone" type="tel" inputmode="tel" placeholder="Contoh: 0812xxxxxxx" autocomplete="off" />
+            <p class="field-hint">Nomor tidak disimpan. WhatsApp akan terbuka dan kamu yang tekan kirim.</p>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost" data-wa-close>Batal</button>
+            <button type="submit" class="btn-primary">Buka WhatsApp</button>
           </div>
         </form>
       </div>
