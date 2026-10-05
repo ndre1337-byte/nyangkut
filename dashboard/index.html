@@ -677,12 +677,20 @@
                 <span class="seg-text"><span class="seg-title">Nominal masing-masing</span></span>
               </button>
             </div>
+            <div class="split-custom-hint" data-sb-custom-hint hidden>
+              <p class="split-hint-title">Masukkan bagian masing-masing.</p>
+              <p class="field-hint">Total semua bagian harus sama dengan <strong data-sb-hint-total></strong>.</p>
+            </div>
           </div>
           <ul class="split-amounts" data-sb-amounts></ul>
           <div class="split-total-check" data-sb-total-check hidden>
-            <p>Dibagi: <strong data-sb-sum></strong></p>
-            <p>Seharusnya: <strong data-sb-target></strong></p>
-            <p class="field-error" data-sb-diff></p>
+            <div class="stc-head">
+              <span class="stc-title">Pembagian</span>
+              <span class="stc-status" data-sb-status></span>
+            </div>
+            <div class="stc-amount"><strong data-sb-sum></strong><span class="stc-of"> dari <span data-sb-target></span></span></div>
+            <div class="stc-progress" aria-hidden="true"><div class="stc-progress-fill" data-sb-progress></div></div>
+            <p class="stc-diff" data-sb-diff></p>
           </div>
         </div>
 

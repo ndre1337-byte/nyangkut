@@ -258,28 +258,37 @@
   function splitRenderAmounts() {
     var ul = document.querySelector("[data-sb-amounts]");
     if (!ul) return;
-    var others = splitState.people.filter(function (p) { return !p.isSelf; });
+    var userName = splitGetUserName();
 
     if (splitState.method === "equal") {
       var shares = splitCalcEqual(splitState.total, splitState.people.length);
       ul.innerHTML = splitState.people.map(function (p, idx) {
-        var label = p.isSelf ? "Saya (bagian kamu)" : Nyangkut.escapeHtml(p.name);
-        return '<li class="split-amount-row">' +
-          '<span class="split-name">' + label + "</span>" +
-          '<span class="split-name" style="text-align:right;font-weight:800">' + Nyangkut.rupiah(shares[idx]) + "</span>" +
+        var displayName = p.isSelf ? userName : Nyangkut.escapeHtml(p.name);
+        var label = p.isSelf ? "Bagian kamu" : "Harus bayar";
+        return '<li class="split-amount-card">' +
+          '<span class="sp-avatar" aria-hidden="true">👤</span>' +
+          '<span class="sp-info"><span class="sp-name">' + displayName + '</span>' +
+          '<span class="sp-sub">' + label + "</span></span>" +
+          '<span class="sp-amount-static">' + Nyangkut.rupiah(shares[idx]) + "</span>" +
           "</li>";
       }).join("");
       var check = document.querySelector("[data-sb-total-check]");
       if (check) check.hidden = true;
+      var hint = document.querySelector("[data-sb-custom-hint]");
+      if (hint) hint.hidden = true;
     } else {
       // Custom: input per orang.
       ul.innerHTML = splitState.people.map(function (p, idx) {
-        var label = p.isSelf ? "Saya" : Nyangkut.escapeHtml(p.name);
+        var displayName = p.isSelf ? userName : Nyangkut.escapeHtml(p.name);
+        var label = p.isSelf ? "Bagian kamu" : "Harus bayar";
+        var ariaLabel = p.isSelf ? "Bagian " + userName : "Bagian " + p.name;
         var val = splitState.customAmounts[p.name] || "";
-        return '<li class="split-amount-row">' +
-          '<span class="split-name">' + label + "</span>" +
-          '<div class="amount-wrap"><span class="amount-prefix" aria-hidden="true">Rp</span>' +
-          '<input type="text" inputmode="numeric" data-sb-amount-idx="' + idx + '" placeholder="0" value="' + Nyangkut.escapeHtml(String(val)) + '" />' +
+        return '<li class="split-amount-card">' +
+          '<span class="sp-avatar" aria-hidden="true">👤</span>' +
+          '<span class="sp-info"><span class="sp-name">' + displayName + '</span>' +
+          '<span class="sp-sub">' + label + "</span></span>" +
+          '<div class="amount-wrap split-amount-input"><span class="amount-prefix" aria-hidden="true">Rp</span>' +
+          '<input type="text" inputmode="numeric" data-sb-amount-idx="' + idx + '" placeholder="0" value="' + Nyangkut.escapeHtml(String(val)) + '" aria-label="' + Nyangkut.escapeHtml(ariaLabel) + '" />' +
           "</div></li>";
       }).join("");
       ul.querySelectorAll("[data-sb-amount-idx]").forEach(function (input) {
@@ -300,6 +309,13 @@
           input.value = v > 0 ? v.toLocaleString("id-ID") : "";
         });
       });
+      // Custom hint dengan total dinamis.
+      var hintEl = document.querySelector("[data-sb-custom-hint]");
+      if (hintEl) {
+        var ht = hintEl.querySelector("[data-sb-hint-total]");
+        if (ht) ht.textContent = Nyangkut.rupiah(splitState.total);
+        hintEl.hidden = false;
+      }
       splitUpdateTotalCheck();
     }
   }
@@ -315,19 +331,30 @@
     var sumEl = check.querySelector("[data-sb-sum]");
     var targetEl = check.querySelector("[data-sb-target]");
     var diffEl = check.querySelector("[data-sb-diff]");
+    var statusEl = check.querySelector("[data-sb-status]");
+    var progressEl = check.querySelector("[data-sb-progress]");
     if (sumEl) sumEl.textContent = Nyangkut.rupiah(sum);
     if (targetEl) targetEl.textContent = Nyangkut.rupiah(splitState.total);
+
+    var diff = splitState.total - sum;
+    check.classList.remove("is-success", "is-over");
+    if (progressEl) {
+      var pct = splitState.total > 0 ? Math.min(100, Math.round((sum / splitState.total) * 100)) : 0;
+      progressEl.style.width = pct + "%";
+    }
+
     if (diffEl) {
-      var diff = splitState.total - sum;
-      if (diff === 0) {
+      if (diff === 0 && sum > 0) {
         diffEl.textContent = "✓ Total sudah pas.";
-        diffEl.style.color = "#059669";
+        check.classList.add("is-success");
+        if (statusEl) statusEl.textContent = "✓";
       } else if (diff > 0) {
-        diffEl.textContent = "Kurang " + Nyangkut.rupiah(diff) + " lagi.";
-        diffEl.style.color = "#dc2626";
+        diffEl.textContent = "Kurang " + Nyangkut.rupiah(diff) + ".";
+        if (statusEl) statusEl.textContent = "";
       } else {
         diffEl.textContent = "Kelebihan " + Nyangkut.rupiah(-diff) + ".";
-        diffEl.style.color = "#dc2626";
+        check.classList.add("is-over");
+        if (statusEl) statusEl.textContent = "!";
       }
       diffEl.hidden = false;
     }
@@ -337,6 +364,43 @@
       nextBtn.disabled = (sum !== splitState.total);
       nextBtn.style.opacity = (sum !== splitState.total) ? "0.5" : "1";
     }
+    // "Isi sisa" helper: hanya jika tepat 1 yang kosong dan remaining > 0.
+    splitUpdateFillRest(diff);
+  }
+
+  function splitUpdateFillRest(diff) {
+    // Hapus helper lama.
+    var old = document.querySelector("[data-sb-fill-rest]");
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+
+    if (diff <= 0) return;
+    var empties = splitState.people.filter(function (p) {
+      return !(splitState.customAmounts[p.name] > 0);
+    });
+    if (empties.length !== 1) return;
+    var p = empties[0];
+    var ul = document.querySelector("[data-sb-amounts]");
+    if (!ul) return;
+    var idx = splitState.people.indexOf(p);
+    var rows = ul.querySelectorAll(".split-amount-card");
+    if (idx < 0 || idx >= rows.length) return;
+
+    var helper = document.createElement("div");
+    helper.className = "split-fill-rest";
+    helper.setAttribute("data-sb-fill-rest", "");
+    helper.innerHTML = '<span>Sisa ' + Nyangkut.rupiah(diff) + '</span>' +
+      '<button type="button" class="btn-ghost btn-sm" data-sb-fill-btn>Isi sisa</button>';
+    rows[idx].appendChild(helper);
+
+    helper.querySelector("[data-sb-fill-btn]").addEventListener("click", function () {
+      // Jangan override amount yang sudah diisi.
+      if (splitState.customAmounts[p.name] > 0) return;
+      splitState.customAmounts[p.name] = diff;
+      // Update input display.
+      var input = rows[idx].querySelector("[data-sb-amount-idx]");
+      if (input) input.value = diff.toLocaleString("id-ID");
+      splitUpdateTotalCheck();
+    });
   }
 
   function splitGetShares() {
