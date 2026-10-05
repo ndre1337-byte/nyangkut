@@ -2376,27 +2376,7 @@
   if (e.key === "Escape") closeMore();
   });
 
-  // Theme toggle (global light/dark).
-  (function initThemeToggle() {
-    if (!window.NyangkutTheme) return;
-    var opts = document.querySelectorAll("[data-theme-opt]");
-    function sync() {
-      var cur = window.NyangkutTheme.get();
-      opts.forEach(function (b) {
-        var active = b.getAttribute("data-theme-opt") === cur;
-        b.classList.toggle("is-selected", active);
-        b.setAttribute("aria-checked", active ? "true" : "false");
-      });
-    }
-    opts.forEach(function (b) {
-      b.addEventListener("click", function () {
-        window.NyangkutTheme.set(b.getAttribute("data-theme-opt"));
-        sync();
-      });
-    });
-    document.addEventListener("nyangkut:theme", sync);
-    sync();
-  })();
+  // Theme toggle lives in /assets/theme-toggle.js (single ☀️/🌙 header button).
 
   // Kalau halaman dikembalikan dari bfcache (mis. tombol back setelah logout),
   // validasi ulang session supaya data private tidak tampil basi.

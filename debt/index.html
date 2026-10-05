@@ -21,14 +21,21 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="/assets/supabase-client.js"></script>
     <script defer src="/debt/debt.js"></script>
-      <script src="/assets/theme.js" defer></script>
+    <script defer src="/assets/theme.js"></script>
+    <script defer src="/assets/theme-toggle.js"></script>
 </head>
   <body data-page="debt">
     <div class="app">
       <aside class="sidebar" aria-label="Navigasi utama">
-        <a class="side-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut">
-          <img src="/assets/logo-nyangkut.png?v=2" alt="Nyangkut" />
-        </a>
+        <div class="side-brand-row">
+          <a class="side-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut">
+            <img class="logo-light" src="/assets/logo-nyangkut.png?v=3" alt="Nyangkut" />
+            <img class="logo-dark" src="/assets/logo-nyangkut-dark.png?v=3" alt="" aria-hidden="true" />
+          </a>
+          <button type="button" class="theme-toggle" data-theme-toggle aria-label="Gunakan mode gelap" title="Gunakan mode gelap">
+            <span class="tt-icon" aria-hidden="true">☀️</span>
+          </button>
+        </div>
         <nav class="side-nav">
           <a href="/dashboard/#top" class="side-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -61,6 +68,15 @@
       </aside>
 
       <div class="main-wrap">
+        <header class="mobile-topbar">
+          <a class="mt-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut">
+            <img class="logo-light" src="/assets/logo-nyangkut.png?v=3" alt="Nyangkut" />
+            <img class="logo-dark" src="/assets/logo-nyangkut-dark.png?v=3" alt="" aria-hidden="true" />
+          </a>
+          <button type="button" class="theme-toggle" data-theme-toggle aria-label="Gunakan mode gelap" title="Gunakan mode gelap">
+            <span class="tt-icon" aria-hidden="true">☀️</span>
+          </button>
+        </header>
         <main class="dash-main">
           <a class="back-link" href="/dashboard/">← Kembali</a>
 

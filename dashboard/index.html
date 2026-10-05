@@ -22,6 +22,7 @@
     <script defer src="/assets/supabase-client.js"></script>
     <script defer src="/assets/auth-ui.js"></script>
     <script defer src="/assets/theme.js"></script>
+    <script defer src="/assets/theme-toggle.js"></script>
     <script defer src="/dashboard/dashboard.js"></script>
     <script defer src="/dashboard/split-bill.js"></script>
 </head>
@@ -29,9 +30,15 @@
     <div class="app">
       <!-- ============ SIDEBAR (desktop) ============ -->
       <aside class="sidebar" aria-label="Navigasi utama">
-        <a class="side-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut">
-          <img src="/assets/logo-nyangkut.png?v=2" alt="Nyangkut" />
-        </a>
+        <div class="side-brand-row">
+          <a class="side-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut">
+            <img class="logo-light" src="/assets/logo-nyangkut.png?v=3" alt="Nyangkut" />
+            <img class="logo-dark" src="/assets/logo-nyangkut-dark.png?v=3" alt="" aria-hidden="true" />
+          </a>
+          <button type="button" class="theme-toggle" data-theme-toggle aria-label="Gunakan mode gelap" title="Gunakan mode gelap">
+            <span class="tt-icon" aria-hidden="true">☀️</span>
+          </button>
+        </div>
         <nav class="side-nav" aria-label="Menu utama">
           <a href="#" class="side-link is-active" data-nav="dashboard">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -55,19 +62,6 @@
           </a>
         </nav>
         <div class="side-secondary" aria-label="Menu lainnya">
-          <div class="side-theme" data-theme-section>
-            <span class="side-theme-label">Tampilan</span>
-            <div class="seg theme-seg side-theme-seg" role="radiogroup" aria-label="Tampilan">
-              <button type="button" class="seg-opt" data-theme-opt="light" role="radio" aria-checked="false" title="Terang">
-                <span class="seg-check" aria-hidden="true">✓</span>
-                <span class="seg-text"><span class="seg-title">☀️</span></span>
-              </button>
-              <button type="button" class="seg-opt" data-theme-opt="dark" role="radio" aria-checked="false" title="Gelap">
-                <span class="seg-check" aria-hidden="true">✓</span>
-                <span class="seg-text"><span class="seg-title">🌙</span></span>
-              </button>
-            </div>
-          </div>
           <a href="#premium" class="side-link side-premium" data-nav="premium">
             <span class="side-emoji" aria-hidden="true">✨</span>
             <span>Nyangkut Premium</span>
@@ -86,6 +80,15 @@
 
       <!-- ============ MAIN ============ -->
       <div class="main-wrap">
+        <header class="mobile-topbar">
+          <a class="mt-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut">
+            <img class="logo-light" src="/assets/logo-nyangkut.png?v=3" alt="Nyangkut" />
+            <img class="logo-dark" src="/assets/logo-nyangkut-dark.png?v=3" alt="" aria-hidden="true" />
+          </a>
+          <button type="button" class="theme-toggle" data-theme-toggle aria-label="Gunakan mode gelap" title="Gunakan mode gelap">
+            <span class="tt-icon" aria-hidden="true">☀️</span>
+          </button>
+        </header>
         <main class="dash-main" id="top">
           <!-- Header -->
           <header class="page-head">
@@ -436,19 +439,6 @@
       <div class="sheet-backdrop" data-more-backdrop hidden></div>
       <div class="sheet" role="dialog" aria-modal="true" aria-label="Menu" data-more-sheet hidden>
         <div class="sheet-handle" aria-hidden="true"></div>
-        <div class="sheet-section" data-theme-section>
-          <span class="sheet-section-label">Tampilan</span>
-          <div class="seg theme-seg" role="radiogroup" aria-label="Tampilan">
-            <button type="button" class="seg-opt" data-theme-opt="light" role="radio" aria-checked="false">
-              <span class="seg-check" aria-hidden="true">✓</span>
-              <span class="seg-text"><span class="seg-title">☀️ Terang</span></span>
-            </button>
-            <button type="button" class="seg-opt" data-theme-opt="dark" role="radio" aria-checked="false">
-              <span class="seg-check" aria-hidden="true">✓</span>
-              <span class="seg-text"><span class="seg-title">🌙 Gelap</span></span>
-            </button>
-          </div>
-        </div>
         <a href="#premium" class="sheet-link" data-more-link data-menu-premium>
           <span class="sheet-icon" aria-hidden="true">✨</span>
           <span class="sheet-text"><strong data-menu-premium-title>Premium</strong><small data-menu-premium-sub>Segera hadir</small></span>

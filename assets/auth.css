@@ -66,6 +66,11 @@ a { color: inherit; }
 .site-header { width: min(1120px, 100%); margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; }
 .brand img { height: 36px; width: auto; display: block; }
+
+/* Adaptive logo: light variant default, dark variant in dark mode. */
+img.logo-dark { display: none; }
+[data-theme="dark"] img.logo-light { display: none; }
+[data-theme="dark"] img.logo-dark { display: block; }
 .header-link { display: inline-flex; align-items: center; gap: 4px; padding: 9px 18px; border-radius: 999px; background: var(--brand-soft); border: 1px solid rgba(99, 102, 241, .16); color: var(--brand-dark); font-size: 14px; font-weight: 600; text-decoration: none; white-space: nowrap; transition: background .18s ease, box-shadow .18s ease; }
 .header-link:hover { background: #e0e6ff; box-shadow: 0 4px 12px rgba(99, 102, 241, .18); color: var(--brand-dark); }
 .text-link:hover { color: var(--brand-dark); }

@@ -148,6 +148,11 @@ img { max-width: 100%; display: block; }
 }
 .brand-logo { height: 38px; width: auto; display: block; }
 
+/* Adaptive logo: light variant default, dark variant in dark mode. */
+img.logo-dark { display: none; }
+[data-theme="dark"] img.logo-light { display: none; }
+[data-theme="dark"] img.logo-dark { display: block; }
+
 .nav-links { display: none; gap: 28px; }
 .nav-links a {
   text-decoration: none;

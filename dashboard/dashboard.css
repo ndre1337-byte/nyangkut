@@ -113,11 +113,72 @@ img { max-width: 100%; display: block; }
 .side-brand {
   display: block;
   padding: 4px 8px 0;
-  margin-bottom: 44px;
   text-decoration: none;
 }
 
 .side-brand img { height: 32px; width: auto; }
+
+/* Brand row: logo + theme toggle (header). */
+.side-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 44px;
+}
+.side-brand-row .side-brand { padding: 4px 0 0; margin-bottom: 0; }
+
+/* Adaptive logo: light variant default, dark variant in dark mode. */
+img.logo-dark { display: none; }
+[data-theme="dark"] img.logo-light { display: none; }
+[data-theme="dark"] img.logo-dark { display: inline-block; }
+
+/* Compact header theme toggle (single source of truth: NyangkutTheme). */
+.theme-toggle {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--ease), border-color var(--ease), transform var(--ease);
+}
+.theme-toggle:hover { background: var(--surface-soft); }
+.theme-toggle:active { transform: scale(0.94); }
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.theme-toggle .tt-icon { display: block; }
+
+/* Mobile top bar: logo + theme toggle. Desktop uses the sidebar. */
+.mobile-topbar {
+  display: none;
+}
+@media (max-width: 1023.98px) {
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+  .mt-brand { display: inline-flex; text-decoration: none; }
+  .mt-brand img { height: 30px; width: auto; }
+  .mobile-topbar .theme-toggle { width: 44px; height: 44px; }
+}
 
 .side-nav {
   display: flex;
@@ -1221,43 +1282,6 @@ a.hub-card:hover, button.hub-card:hover {
   border-radius: 12px;
 }
 .split-add[hidden] { display: none; }
-/* Theme section in Menu sheet */
-.sheet-section {
-  padding: 4px 0 12px;
-}
-.sheet-section-label {
-  display: block;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-.theme-seg {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-}
-/* Desktop sidebar theme toggle */
-.side-theme {
-  padding: 8px 12px;
-  margin-bottom: 4px;
-}
-.side-theme-label {
-  display: block;
-  font-size: 0.68rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 6px;
-}
-.side-theme-seg .seg-opt {
-  padding: 6px 4px;
-}
-.side-theme-seg .seg-title {
-  font-size: 1.1rem;
-}
 .split-amount-row {
   display: flex;
   align-items: center;

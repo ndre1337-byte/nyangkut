@@ -98,9 +98,69 @@ img { max-width: 100%; display: block; }
   .main-wrap { margin-left: var(--sidebar-w); }
 }
 
-.side-brand { display: block; padding: 4px 8px 0; margin-bottom: 44px; text-decoration: none; }
+.side-brand { display: block; padding: 4px 8px 0; text-decoration: none; }
 .side-brand img { height: 32px; width: auto; }
 .side-nav { display: flex; flex-direction: column; gap: 4px; }
+
+/* Brand row: logo + theme toggle (header). */
+.side-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 44px;
+}
+.side-brand-row .side-brand { padding: 4px 0 0; }
+
+/* Adaptive logo: light variant default, dark variant in dark mode. */
+img.logo-dark { display: none; }
+[data-theme="dark"] img.logo-light { display: none; }
+[data-theme="dark"] img.logo-dark { display: inline-block; }
+
+/* Compact header theme toggle (single source of truth: NyangkutTheme). */
+.theme-toggle {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+.theme-toggle:hover { background: var(--surface-soft); }
+.theme-toggle:active { transform: scale(0.94); }
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.theme-toggle .tt-icon { display: block; }
+
+/* Mobile top bar: logo + theme toggle. Desktop uses the sidebar. */
+.mobile-topbar { display: none; }
+@media (max-width: 1023.98px) {
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 60;
+  }
+  .mt-brand { display: inline-flex; text-decoration: none; }
+  .mt-brand img { height: 30px; width: auto; }
+  .mobile-topbar .theme-toggle { width: 44px; height: 44px; }
+}
 
 .side-link {
   display: flex;

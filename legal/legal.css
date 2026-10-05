@@ -70,6 +70,11 @@ img { max-width: 100%; display: block; }
 
 .legal-brand img { height: 30px; width: auto; }
 
+/* Adaptive logo: light variant default, dark variant in dark mode. */
+img.logo-dark { display: none; }
+[data-theme="dark"] img.logo-light { display: none; }
+[data-theme="dark"] img.logo-dark { display: inline-block; }
+
 /* ---------- main ---------- */
 .legal-main {
   max-width: 760px;
