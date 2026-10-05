@@ -16,6 +16,7 @@
     <script defer src="/assets/supabase-client.js"></script>
     <script defer src="/assets/auth-ui.js"></script>
     <script defer src="/dashboard/dashboard.js"></script>
+    <script defer src="/dashboard/split-bill.js"></script>
   </head>
   <body data-page="dashboard">
     <div class="app">
@@ -484,7 +485,27 @@
         <form data-debt-form novalidate>
           <p class="form-error" data-form-error hidden></p>
 
-          <div class="field">
+          <!-- Mode selector: Catatan Biasa vs Split Bill -->
+          <div class="field" data-mode-field>
+            <div class="seg seg-mode" role="radiogroup" aria-label="Jenis catatan">
+              <button type="button" class="seg-opt is-selected" data-mode="biasa" role="radio" aria-checked="true">
+                <span class="seg-check" aria-hidden="true">✓</span>
+                <span class="seg-text">
+                  <span class="seg-title">Catatan Biasa</span>
+                  <span class="seg-sub">Catat uang yang masih nyangkut.</span>
+                </span>
+              </button>
+              <button type="button" class="seg-opt" data-mode="split" role="radio" aria-checked="false">
+                <span class="seg-check" aria-hidden="true">✓</span>
+                <span class="seg-text">
+                  <span class="seg-title">Split Bill 🧾</span>
+                  <span class="seg-sub">Bagi tagihan, buat catatan otomatis.</span>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div data-biasa-fields>
             <span class="field-label" id="dir-label">Ini soal uang siapa?</span>
             <div class="seg" role="radiogroup" aria-labelledby="dir-label">
               <button type="button" class="seg-opt" data-direction="receivable" role="radio" aria-checked="false">
@@ -572,7 +593,114 @@
               <span data-button-label>Simpan Catatan</span>
             </button>
           </div>
+          </div><!-- /data-biasa-fields -->
         </form>
+      </div>
+    </div>
+
+    <!-- ============ SPLIT BILL WIZARD ============ -->
+    <div class="modal-backdrop" data-split-modal hidden>
+      <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="split-title">
+        <div class="sheet-handle modal-handle" aria-hidden="true"></div>
+        <div class="form-head">
+          <h2 id="split-title">Split Bill 🧾</h2>
+          <button class="btn-icon" type="button" data-split-close aria-label="Tutup">✕</button>
+        </div>
+
+        <!-- Progress -->
+        <div class="split-progress" data-split-progress>
+          <span class="sp-step is-active" data-sp="1">1. Detail</span>
+          <span class="sp-step" data-sp="2">2. Peserta</span>
+          <span class="sp-step" data-sp="3">3. Bagi</span>
+          <span class="sp-step" data-sp="4">4. Review</span>
+        </div>
+
+        <p class="form-error" data-split-error hidden></p>
+
+        <!-- STEP 1: Detail -->
+        <div data-split-step="1">
+          <p class="field-hint" style="margin-bottom:12px">Bagi tagihan, lalu buat catatan otomatis.</p>
+          <div class="field">
+            <label class="field-label" for="sb-name">Nama tagihan</label>
+            <input id="sb-name" type="text" placeholder="Contoh: Makan malam" maxlength="120" autocomplete="off" />
+            <p class="field-error" data-sb-error="name" hidden>Nama tagihan perlu diisi.</p>
+          </div>
+          <div class="field">
+            <label class="field-label" for="sb-total">Total tagihan</label>
+            <div class="amount-wrap">
+              <span class="amount-prefix" aria-hidden="true">Rp</span>
+              <input id="sb-total" type="text" inputmode="numeric" placeholder="500.000" autocomplete="off" />
+            </div>
+            <p class="field-error" data-sb-error="total" hidden>Nominal harus lebih dari Rp0.</p>
+          </div>
+          <div class="field">
+            <label class="field-label" for="sb-date">Tanggal</label>
+            <input id="sb-date" type="date" />
+          </div>
+          <div class="field">
+            <label class="field-label" for="sb-due">Jatuh tempo <span class="opt">(opsional)</span></label>
+            <input id="sb-due" type="date" />
+            <button type="button" class="link-btn" data-sb-clear-due>Tidak ada jatuh tempo</button>
+          </div>
+        </div>
+
+        <!-- STEP 2: Peserta -->
+        <div data-split-step="2" hidden>
+          <p class="field-hint" style="margin-bottom:12px">Siapa saja yang ikut? Kamu yang bayar dulu.</p>
+          <ul class="split-people" data-sb-people></ul>
+          <button type="button" class="btn-ghost btn-sm" data-sb-add-person>+ Tambah orang</button>
+          <p class="field-error" data-sb-error="people" hidden>Minimal 1 orang selain kamu.</p>
+        </div>
+
+        <!-- STEP 3: Cara bagi -->
+        <div data-split-step="3" hidden>
+          <div class="field">
+            <span class="field-label">Cara bagi</span>
+            <div class="seg" role="radiogroup" aria-label="Cara bagi">
+              <button type="button" class="seg-opt is-selected" data-split-method="equal" role="radio" aria-checked="true">
+                <span class="seg-check" aria-hidden="true">✓</span>
+                <span class="seg-text"><span class="seg-title">Bagi rata</span></span>
+              </button>
+              <button type="button" class="seg-opt" data-split-method="custom" role="radio" aria-checked="false">
+                <span class="seg-check" aria-hidden="true">✓</span>
+                <span class="seg-text"><span class="seg-title">Nominal masing-masing</span></span>
+              </button>
+            </div>
+          </div>
+          <ul class="split-amounts" data-sb-amounts></ul>
+          <div class="split-total-check" data-sb-total-check hidden>
+            <p>Dibagi: <strong data-sb-sum></strong></p>
+            <p>Seharusnya: <strong data-sb-target></strong></p>
+            <p class="field-error" data-sb-diff></p>
+          </div>
+        </div>
+
+        <!-- STEP 4: Review -->
+        <div data-split-step="4" hidden>
+          <div data-sb-review></div>
+        </div>
+
+        <!-- STEP 5: Success -->
+        <div data-split-step="5" hidden>
+          <div class="split-success">
+            <p class="split-success-emoji" aria-hidden="true">🎉</p>
+            <h3>Split Bill berhasil!</h3>
+            <p data-sb-success-sub></p>
+            <ul class="split-amounts" data-sb-success-list></ul>
+            <p class="split-success-total">Total yang masih harus kembali: <strong data-sb-success-total></strong></p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions" data-split-actions>
+          <button type="button" class="btn-ghost" data-split-back hidden>Kembali</button>
+          <button type="button" class="btn-ghost" data-split-close2>Batal</button>
+          <button type="button" class="btn-primary" data-split-next>Lanjut</button>
+        </div>
+        <div class="form-actions" data-split-success-actions hidden>
+          <button type="button" class="btn-ghost" data-split-close3>Selesai</button>
+          <button type="button" class="btn-primary" data-sb-wa>Bagikan ke WhatsApp</button>
+        </div>
       </div>
     </div>
 

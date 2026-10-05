@@ -2383,5 +2383,12 @@
   });
 
   initCalendar();
+  // Hook untuk Split Bill (file terpisah): refresh data & tutup modal.
+  window.NyangkutSplitBill = {
+    refresh: function () { load(); },
+    getDebts: function () { return allDebts || []; },
+    closeAddModal: function () { closeModal(); },
+    getClient: function () { return waitForClient(); },
+  };
   load();
 })();

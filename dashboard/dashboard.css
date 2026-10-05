@@ -1060,6 +1060,103 @@ a.hub-card:hover, button.hub-card:hover {
   .hook-price { margin: 0; text-align: right; }
 }
 
+/* ============ Split Bill Wizard ============ */
+.split-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+}
+.sp-step {
+  flex: 1;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: 8px;
+  background: var(--bg);
+  white-space: nowrap;
+}
+.sp-step.is-active {
+  color: var(--primary-dark);
+  background: var(--surface-soft);
+}
+.split-people, .split-amounts {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.split-person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.split-person input {
+  flex: 1;
+}
+.split-person .btn-icon {
+  flex: none;
+}
+.split-person.is-self input {
+  background: var(--surface-soft);
+}
+.split-amount-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.split-amount-row .split-name {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.split-amount-row .amount-wrap {
+  flex: none;
+  width: 160px;
+}
+.split-total-check {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.split-total-check p { margin: 4px 0; font-size: 0.85rem; }
+.split-review-head {
+  margin-bottom: 12px;
+}
+.split-review-head h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.split-review-head p { margin: 2px 0; font-size: 0.85rem; color: var(--text-muted); }
+.split-review-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.split-review-item:last-child { border-bottom: none; }
+.split-review-item .r-name { font-weight: 700; font-size: 0.92rem; }
+.split-review-item .r-sub { font-size: 0.78rem; color: var(--text-muted); }
+.split-review-item .r-amount { font-weight: 800; font-size: 0.95rem; }
+.split-review-total {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--surface-soft);
+  border-radius: 12px;
+  text-align: center;
+}
+.split-success { text-align: center; }
+.split-success-emoji { font-size: 3rem; margin: 0 0 8px; }
+.split-success h3 { margin: 0 0 8px; }
+.split-success-total { margin-top: 12px; font-size: 0.95rem; }
+.seg-mode { margin-bottom: 4px; }
+
 /* ============ View Switching ============ */
 /* Dashboard overview vs dedicated views. Premium Hub tidak di dashboard. */
 [data-view][hidden] { display: none !important; }
