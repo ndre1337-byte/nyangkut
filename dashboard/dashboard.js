@@ -340,7 +340,8 @@
 
   // ============ Yang Perlu Diperhatikan ============
   // Priority: 1. Terlambat | 2. Jatuh tempo hari ini | 3. Jatuh tempo terdekat | 4. Partial
-  // Max 3 items. Hanya dari allDebts (RLS-filtered). Paid selalu excluded.
+  // Max 3 items. Hanya dari allDebts (RLS-filtered). Paid & tanpa due_date excluded.
+  // Timezone: pakai todayJakarta() agar konsisten dengan Calendar.
   function renderAttention() {
     var list = document.querySelector("[data-attn-list]");
     var empty = document.querySelector("[data-attn-empty]");
@@ -348,10 +349,16 @@
     var sub = document.querySelector("[data-attn-sub]");
     if (!list) return;
 
-    var today = dayStr(new Date());
+    var today = todayJakarta();
     var active = (allDebts || []).filter(function (d) {
-      return d.status !== "paid" && (d.amount - (d.paid_amount || 0)) > 0;
+      return d.status !== "paid" && (d.amount - (d.paid_amount || 0)) > 0 && !!d.due_date;
     });
+
+    // Hitung selisih hari dari due_date ke today (positif = terlambat).
+    function daysOverdue(due) {
+      var ms = Date.parse(today) - Date.parse(due);
+      return Math.round(ms / 86400000);
+    }
 
     // Kategorikan.
     var overdue = [];
@@ -361,55 +368,41 @@
 
     active.forEach(function (d) {
       var remaining = d.amount - (d.paid_amount || 0);
-      if (d.due_date && d.due_date < today) {
-        overdue.push({ debt: d, remaining: remaining, kind: "overdue" });
-      } else if (d.due_date && d.due_date === today) {
+      if (d.due_date < today) {
+        overdue.push({ debt: d, remaining: remaining, kind: "overdue", days: daysOverdue(d.due_date) });
+      } else if (d.due_date === today) {
         dueToday.push({ debt: d, remaining: remaining, kind: "today" });
-      } else if (d.due_date && d.due_date > today) {
-        upcoming.push({ debt: d, remaining: remaining, kind: "soon" });
       } else if (d.status === "partial") {
+        // Partial dengan due_date future: masuk kategori partial (tapi tetap sort by due_date).
         partial.push({ debt: d, remaining: remaining, kind: "partial" });
+      } else {
+        upcoming.push({ debt: d, remaining: remaining, kind: "soon" });
       }
     });
 
-    // Sort: overdue by due_date asc, upcoming by due_date asc.
+    // Sort: overdue by due_date asc (paling lama terlambat dulu), upcoming/partial by due_date asc.
     overdue.sort(function (a, b) { return a.debt.due_date < b.debt.due_date ? -1 : 1; });
     upcoming.sort(function (a, b) { return a.debt.due_date < b.debt.due_date ? -1 : 1; });
+    partial.sort(function (a, b) { return a.debt.due_date < b.debt.due_date ? -1 : 1; });
 
     // Gabung dengan priority, max 3.
     var items = overdue.concat(dueToday, upcoming, partial).slice(0, 3);
 
+    // Heading selalu statis.
+    if (title) title.textContent = "🔔 Yang Perlu Diperhatikan";
+
     if (items.length === 0) {
       list.innerHTML = "";
       if (empty) empty.hidden = false;
-      if (title) title.textContent = "✨ Aman untuk sekarang";
-      if (sub) {
-        // Cek apakah ada upcoming (tidak urgent).
-        var hasUpcoming = active.some(function (d) { return d.due_date && d.due_date > today; });
-        sub.textContent = hasUpcoming
-          ? "Semua pembayaran masih dalam jadwal."
-          : "Nggak ada pembayaran yang terlambat.";
-        sub.hidden = false;
-      }
+      if (sub) sub.hidden = true;
+      // Update empty text via HTML sudah statis, tapi pastikan sub disembunyikan.
       return;
     }
 
     if (empty) empty.hidden = true;
-    if (sub) sub.hidden = true;
-
-    // Headline berdasarkan kondisi.
-    if (title) {
-      if (overdue.length > 0) {
-        title.textContent = "🚨 Ada yang perlu ditangani";
-        if (sub) {
-          sub.textContent = overdue.length + " catatan perlu perhatian.";
-          sub.hidden = false;
-        }
-      } else if (dueToday.length > 0) {
-        title.textContent = "🔔 Jatuh tempo hari ini";
-      } else {
-        title.textContent = "🔔 Yang Perlu Diperhatikan";
-      }
+    if (sub) {
+      sub.textContent = "Beberapa catatan yang perlu kamu cek.";
+      sub.hidden = false;
     }
 
     list.innerHTML = items.map(function (item) {
@@ -418,10 +411,12 @@
       var dotCls = "";
 
       if (item.kind === "overdue") {
-        label = "Terlambat · Sisa " + rupiah(item.remaining);
+        label = "Terlambat " + item.days + " hari · Sisa " + rupiah(item.remaining);
         dotCls = "is-overdue";
       } else if (item.kind === "today") {
-        label = "Jatuh tempo hari ini · " + rupiah(d.amount);
+        // Jika partial, tampilkan sisa; jika belum bayar sama sekali, tampilkan amount.
+        var amtToday = d.status === "partial" ? "Sisa " + rupiah(item.remaining) : rupiah(d.amount);
+        label = "Jatuh tempo hari ini · " + amtToday;
         dotCls = "is-today";
       } else if (item.kind === "soon") {
         label = dueLine(d, today) + " · " + rupiah(item.remaining);
