@@ -126,34 +126,133 @@
     return isNaN(n) ? 0 : n;
   }
 
+  function splitGetUserName() {
+    // Ambil nama user dari dashboard jika ada, fallback "Saya".
+    try {
+      var el = document.querySelector("[data-user-name]");
+      var name = el ? el.textContent.trim() : "";
+      if (name && name !== "Teman") return name;
+    } catch (e) {}
+    return "Saya";
+  }
+
   function splitRenderPeople() {
     var ul = document.querySelector("[data-sb-people]");
     if (!ul) return;
-    ul.innerHTML = splitState.people.map(function (p, idx) {
-      if (p.isSelf) {
-        return '<li class="split-person is-self">' +
-          '<input type="text" value="Saya (kamu yang bayar)" disabled />' +
-          "</li>";
-      }
-      return '<li class="split-person">' +
-        '<input type="text" data-sb-person-idx="' + idx + '" placeholder="Nama orang" maxlength="120" value="' + Nyangkut.escapeHtml(p.name) + '" />' +
-        '<button type="button" class="btn-icon" data-sb-remove-person="' + idx + '" aria-label="Hapus">✕</button>' +
+
+    var userName = splitGetUserName();
+    var others = splitState.people.filter(function (p) { return !p.isSelf; });
+
+    // Saya card (non-editable).
+    var html = '<li class="split-person-card is-self">' +
+      '<span class="sp-avatar" aria-hidden="true">👤</span>' +
+      '<span class="sp-info"><span class="sp-name">' + Nyangkut.escapeHtml(userName) + '</span>' +
+      '<span class="sp-sub">Kamu · Bayar dulu</span></span>' +
+      '<span class="sp-badge">Payer</span>' +
+      "</li>";
+
+    // Others as cards.
+    others.forEach(function (p) {
+      var idx = splitState.people.indexOf(p);
+      html += '<li class="split-person-card">' +
+        '<span class="sp-avatar" aria-hidden="true">👤</span>' +
+        '<span class="sp-info"><span class="sp-name">' + Nyangkut.escapeHtml(p.name) + "</span></span>" +
+        '<button type="button" class="btn-icon sp-remove" data-sb-remove-person="' + idx + '" aria-label="Hapus ' + Nyangkut.escapeHtml(p.name) + '">✕</button>' +
         "</li>";
-    }).join("");
-    // Bind events.
-    ul.querySelectorAll("[data-sb-person-idx]").forEach(function (input) {
-      input.addEventListener("input", function () {
-        var idx = parseInt(input.getAttribute("data-sb-person-idx"), 10);
-        splitState.people[idx].name = input.value;
-      });
     });
+
+    ul.innerHTML = html;
+
+    // Bind remove.
     ul.querySelectorAll("[data-sb-remove-person]").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var idx = parseInt(btn.getAttribute("data-sb-remove-person"), 10);
         splitState.people.splice(idx, 1);
         splitRenderPeople();
+        splitUpdateStep2State();
       });
     });
+
+    splitUpdateStep2State();
+  }
+
+  function splitUpdateStep2State() {
+    var others = splitState.people.filter(function (p) { return !p.isSelf; });
+    var emptyEl = document.querySelector("[data-sb-empty]");
+    var addWrap = document.querySelector("[data-sb-add-wrap]");
+    var addBtn = document.querySelector("[data-sb-add-person]");
+    var nextBtn = document.querySelector("[data-split-next]");
+
+    if (emptyEl) emptyEl.hidden = others.length > 0;
+    // Sembunyikan tombol "+ Tambah orang" saat form add terbuka.
+    if (addBtn) addBtn.hidden = addWrap && !addWrap.hidden;
+
+    // Lanjut disabled jika belum ada peserta lain.
+    if (nextBtn && splitState.step === 2) {
+      var canProceed = others.length >= 1;
+      nextBtn.disabled = !canProceed;
+      nextBtn.style.opacity = canProceed ? "1" : "0.5";
+    }
+  }
+
+  function splitShowAddForm() {
+    var wrap = document.querySelector("[data-sb-add-wrap]");
+    var btn = document.querySelector("[data-sb-add-person]");
+    var input = document.getElementById("sb-person-input");
+    if (wrap) {
+      wrap.hidden = false;
+      var errEl = wrap.querySelector("[data-sb-add-error]");
+      if (errEl) errEl.hidden = true;
+    }
+    if (btn) btn.hidden = true;
+    if (input) {
+      input.value = "";
+      setTimeout(function () { input.focus(); }, 100);
+    }
+    splitUpdateStep2State();
+  }
+
+  function splitHideAddForm() {
+    var wrap = document.querySelector("[data-sb-add-wrap]");
+    var btn = document.querySelector("[data-sb-add-person]");
+    if (wrap) wrap.hidden = true;
+    if (btn) btn.hidden = false;
+    splitUpdateStep2State();
+  }
+
+  function splitConfirmAdd() {
+    var input = document.getElementById("sb-person-input");
+    var wrap = document.querySelector("[data-sb-add-wrap]");
+    var errEl = wrap ? wrap.querySelector("[data-sb-add-error]") : null;
+    var name = input ? input.value.trim() : "";
+
+    function showErr(msg) {
+      if (errEl) { errEl.textContent = msg; errEl.hidden = false; }
+    }
+
+    if (!name) {
+      showErr("Nama orang wajib diisi.");
+      return;
+    }
+    // Duplicate check (case-insensitive + trim).
+    var key = name.toLowerCase();
+    var dup = splitState.people.some(function (p) {
+      return !p.isSelf && p.name.trim().toLowerCase() === key;
+    });
+    // Juga cegah duplikat dengan nama user sendiri.
+    var userName = splitGetUserName().toLowerCase();
+    if (dup || key === userName || key === "saya") {
+      showErr("Orang ini sudah ditambahkan.");
+      return;
+    }
+    if (splitState.people.length >= 20) {
+      showErr("Maksimal 20 peserta.");
+      return;
+    }
+
+    splitState.people.push({ name: name, isSelf: false });
+    splitHideAddForm();
+    splitRenderPeople();
   }
 
   function splitRenderAmounts() {
@@ -505,20 +604,22 @@
       document.getElementById("sb-due").value = "";
     });
 
-    // Step 2: add person.
+    // Step 2: add person (inline form).
     var addPerson = document.querySelector("[data-sb-add-person]");
-    if (addPerson) addPerson.addEventListener("click", function () {
-      if (splitState.people.length >= 20) {
-        var errEl = document.querySelector("[data-split-error]");
-        if (errEl) { errEl.textContent = "Maksimal 20 peserta."; errEl.hidden = false; }
-        return;
-      }
-      splitState.people.push({ name: "", isSelf: false });
-      splitRenderPeople();
-      // Focus input terakhir.
-      var inputs = document.querySelectorAll("[data-sb-person-idx]");
-      if (inputs.length > 0) inputs[inputs.length - 1].focus();
-    });
+    if (addPerson) addPerson.addEventListener("click", splitShowAddForm);
+
+    var confirmAdd = document.querySelector("[data-sb-confirm-add]");
+    if (confirmAdd) confirmAdd.addEventListener("click", splitConfirmAdd);
+
+    var personInput = document.getElementById("sb-person-input");
+    if (personInput) {
+      personInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          splitConfirmAdd();
+        }
+      });
+    }
 
     // Step 3: method selector.
     document.querySelectorAll("[data-split-method]").forEach(function (btn) {

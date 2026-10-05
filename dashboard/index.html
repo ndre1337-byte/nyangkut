@@ -646,10 +646,21 @@
 
         <!-- STEP 2: Peserta -->
         <div data-split-step="2" hidden>
-          <p class="field-hint" style="margin-bottom:12px">Siapa saja yang ikut? Kamu yang bayar dulu.</p>
+          <p class="field-hint" style="margin-bottom:12px">Kamu yang bayar dulu. Tambahkan orang yang ikut patungan.</p>
           <ul class="split-people" data-sb-people></ul>
+          <div class="split-empty" data-sb-empty hidden>
+            <p>Belum ada orang lain.</p>
+            <p class="field-hint">Tambahkan minimal 1 orang untuk membagi tagihan.</p>
+          </div>
+          <div class="split-add" data-sb-add-wrap hidden>
+            <div class="field" style="margin-bottom:8px">
+              <label class="field-label" for="sb-person-input">Nama orang</label>
+              <input id="sb-person-input" type="text" placeholder="Contoh: Budi" maxlength="120" autocomplete="off" />
+              <p class="field-error" data-sb-add-error hidden></p>
+            </div>
+            <button type="button" class="btn-primary btn-sm" data-sb-confirm-add>Tambahkan</button>
+          </div>
           <button type="button" class="btn-ghost btn-sm" data-sb-add-person>+ Tambah orang</button>
-          <p class="field-error" data-sb-error="people" hidden>Minimal 1 orang selain kamu.</p>
         </div>
 
         <!-- STEP 3: Cara bagi -->
