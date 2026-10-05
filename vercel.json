@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/weekly-digest/run",
-      "schedule": "0 1 * * *"
+      "schedule": "0 1 * * 1"
     }
   ],
   "rewrites": [
