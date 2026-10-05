@@ -1301,6 +1301,68 @@ a.hub-card:hover, button.hub-card:hover {
   flex: 1 1 0;
   min-width: 0;
 }
+/* Share rows on success screen (Step 5): per-participant WA button. */
+.split-share-title {
+  margin: 18px 0 4px;
+  font-size: 1rem;
+  font-weight: 800;
+}
+.split-share-sub {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.split-share-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.split-share-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.split-share-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  text-align: left;
+}
+.split-share-info .split-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.split-share-amount {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+.btn-wa-sm {
+  flex: 0 0 auto;
+  border: none;
+  background: #25d366;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 9px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 0.18s ease, filter 0.18s ease;
+}
+.btn-wa-sm:hover { filter: brightness(0.95); }
+.btn-wa-sm:active { transform: scale(0.96); }
+.btn-wa-sm:focus-visible { outline: 2px solid #25d366; outline-offset: 2px; }
 /* Participant amount cards (Step 3 polished) */
 .split-amount-card {
   display: flex;

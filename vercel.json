@@ -49,6 +49,10 @@
     {
       "destination": "/pengaduan/index.html",
       "source": "/pengaduan"
+    },
+    {
+      "destination": "/s/index.html",
+      "source": "/s/:token"
     }
   ]
 }

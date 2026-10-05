@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Bagian kamu — Nyangkut</title>
+  <meta name="description" content="Lihat bagian kamu dari Split Bill yang dicatat dengan Nyangkut." />
+  <!-- Share link adalah credential: jangan index, jangan follow, jangan kirim referrer. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="color-scheme" content="light dark" />
+  <script>
+    // Early theme init (anti-flash). Mengikuti global theme Nyangkut.
+    try {
+      var t = localStorage.getItem("nyangkut-theme");
+      if (t !== "light" && t !== "dark") {
+        t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+      }
+      document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {
+      document.documentElement.setAttribute("data-theme", "light");
+    }
+  </script>
+  <link rel="icon" type="image/png" href="/assets/logo-mark.png?v=2" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/s/share.css" />
+  <script src="/assets/theme.js" defer></script>
+  <script src="/s/share.js" defer></script>
+</head>
+<body>
+  <main class="share-wrap">
+    <a class="share-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut">
+      <img class="logo-light" src="/assets/logo-nyangkut.png?v=3" alt="Nyangkut" />
+      <img class="logo-dark" src="/assets/logo-nyangkut-dark.png?v=3" alt="" aria-hidden="true" />
+    </a>
+
+    <!-- Loading -->
+    <div class="share-card" data-share-loading>
+      <div class="share-skeleton" aria-hidden="true"></div>
+      <p class="share-loading-text">Memuat bagian kamu…</p>
+    </div>
+
+    <!-- Valid share -->
+    <div class="share-card" data-share-content hidden>
+      <p class="share-bill-emoji" aria-hidden="true">🍜</p>
+      <h1 class="share-bill" data-share-bill></h1>
+      <p class="share-payer"><strong data-share-owner></strong> sudah membayar dulu.</p>
+
+      <div class="share-amount-box">
+        <p class="share-label">Bagian kamu</p>
+        <p class="share-amount" data-share-amount></p>
+        <p class="share-status" data-share-status></p>
+        <p class="share-due" data-share-due hidden></p>
+      </div>
+    </div>
+
+    <!-- Invalid / revoked / deleted -->
+    <div class="share-card" data-share-invalid hidden>
+      <p class="share-bill-emoji" aria-hidden="true">🔗</p>
+      <h1 class="share-bill">Link ini sudah tidak tersedia.</h1>
+      <p class="share-payer">Pemilik catatan mungkin sudah menghapus atau menonaktifkan link ini.</p>
+      <a class="btn-primary" href="https://www.nyangkut.id/">Kunjungi Nyangkut</a>
+    </div>
+
+    <!-- Growth CTA: natural, tidak agresif -->
+    <section class="share-cta" data-share-cta hidden>
+      <p class="share-cta-title">Dicatat dengan Nyangkut</p>
+      <p class="share-cta-sub">Semua uang yang masih nyangkut, di satu tempat.</p>
+      <a class="btn-primary" href="/register/">Catat uangmu sendiri →</a>
+      <p class="share-cta-note">Gratis. Tanpa perlu install aplikasi.</p>
+    </section>
+  </main>
+</body>
+</html>

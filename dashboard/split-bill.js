@@ -540,8 +540,23 @@
 
       if (res.error) throw res.error;
 
+      // RPC (migration 009) mengembalikan [{debt_id, share_token}] seurutan
+      // dengan items. Gabungkan dengan data share client-side.
+      var rows = res.data;
+      var valid =
+        Array.isArray(rows) &&
+        rows.length === shares.length &&
+        rows.every(function (r) { return r && typeof r.share_token === "string" && r.share_token.length > 0; });
+      var links = shares.map(function (s, i) {
+        return {
+          name: s.name,
+          amount: s.amount,
+          token: valid ? rows[i].share_token : null,
+        };
+      });
+
       // Success: tampilkan step 5.
-      splitShowSuccess(shares);
+      splitShowSuccess(links);
       // Refresh dashboard data.
       if (window.NyangkutSplitBill) window.NyangkutSplitBill.refresh();
 
@@ -569,43 +584,58 @@
     }
   }
 
-  function splitShowSuccess(shares) {
-    var totalBack = shares.reduce(function (s, x) { return s + x.amount; }, 0);
+  function splitShowSuccess(links) {
+    var totalBack = links.reduce(function (s, x) { return s + x.amount; }, 0);
     var sub = document.querySelector("[data-sb-success-sub]");
-    if (sub) sub.textContent = shares.length + " catatan berhasil dibuat.";
+    if (sub) sub.textContent = links.length + " catatan berhasil dibuat.";
     var ul = document.querySelector("[data-sb-success-list]");
     if (ul) {
-      ul.innerHTML = shares.map(function (s) {
-        return '<li class="split-amount-row"><span class="split-name">' + Nyangkut.escapeHtml(s.name) +
-          '</span><span class="split-name" style="text-align:right;font-weight:800">' + Nyangkut.rupiah(s.amount) + "</span></li>";
+      ul.innerHTML = links.map(function (s, i) {
+        var waBtn = s.token
+          ? '<button type="button" class="btn-wa-sm" data-sb-share-wa="' + i + '">💬 Kirim via WhatsApp</button>'
+          : "";
+        return (
+          '<li class="split-share-row">' +
+          '<div class="split-share-info"><span class="split-name">' + Nyangkut.escapeHtml(s.name) + "</span>" +
+          '<span class="split-share-amount">' + Nyangkut.rupiah(s.amount) + "</span></div>" +
+          waBtn +
+          "</li>"
+        );
       }).join("");
+      // Bind per-participant WA buttons.
+      ul.querySelectorAll("[data-sb-share-wa]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          splitShareWAFor(links[parseInt(btn.getAttribute("data-sb-share-wa"), 10)]);
+        });
+      });
     }
     var totalEl = document.querySelector("[data-sb-success-total]");
     if (totalEl) totalEl.textContent = Nyangkut.rupiah(totalBack);
-    // Simpan untuk WA share.
-    splitState.lastShares = shares;
-    splitState.lastTotalBack = totalBack;
+    // Simpan untuk referensi.
+    splitState.lastLinks = links;
     splitGotoStep(5);
   }
 
-  function splitShareWA() {
-    var shares = splitState.lastShares || [];
+  // Share Bill Link: participant-specific, via WhatsApp.
+  // BUKAN WA Tagih: tidak memakai kuota 10/hari, tidak mengirim reminder.
+  // User yang menekan tombol; tidak ada auto-send.
+  function splitShareWAFor(link) {
+    if (!link || !link.token) return;
+    var url = "https://www.nyangkut.id/s/" + link.token;
     var lines = [
-      "🍽️ Split Bill — " + splitState.billName,
+      "Hai " + link.name + " 👋",
       "",
-      "Total: " + Nyangkut.rupiah(splitState.total),
-      splitState.people.length + " orang",
+      "Ini bagian kamu dari " + (splitState.billName || "Split Bill") + ":",
       "",
-      "Yang perlu dibayar:",
+      Nyangkut.rupiah(link.amount),
+      "",
+      "Lihat detailnya di:",
+      url,
+      "",
+      "— nyangkut.id",
     ];
-    shares.forEach(function (s) {
-      lines.push(s.name + " — " + Nyangkut.rupiah(s.amount));
-    });
-    lines.push("");
-    lines.push("Dicatat di Nyangkut.");
-    var text = lines.join("\n");
-    var url = "https://wa.me/?text=" + encodeURIComponent(text);
-    window.open(url, "_blank");
+    var waUrl = "https://wa.me/?text=" + encodeURIComponent(lines.join("\n"));
+    window.open(waUrl, "_blank");
   }
 
   // Bind Split Bill events (dipanggil sekali saat init).
@@ -699,9 +729,7 @@
       });
     });
 
-    // WA share.
-    var waBtn = document.querySelector("[data-sb-wa]");
-    if (waBtn) waBtn.addEventListener("click", splitShareWA);
+    // WA share per-participant di-bind saat success screen di-render.
   }
 
 

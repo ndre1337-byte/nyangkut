@@ -1,0 +1,177 @@
+/* ============================================================
+   Nyangkut — Share page (/s/<token>)
+   Mobile-first. Clean, friendly, fintech ringan.
+   BUKAN visual Premium Hub.
+   Mengikuti global theme (light/dark) via data-theme.
+   ============================================================ */
+:root {
+  color-scheme: light dark;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-soft: #eef2ff;
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-soft: #eef2ff;
+  --text: #111827;
+  --text-muted: #64748b;
+  --border: #e2e8f0;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --warning: #b45309;
+  --warning-bg: #fffbeb;
+  --radius: 20px;
+  --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px rgba(99, 102, 241, 0.07);
+  --ease: 0.18s ease;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0F1117;
+  --surface: #171A23;
+  --surface-soft: #1D2130;
+  --primary: #818CF8;
+  --primary-dark: #6366F1;
+  --primary-soft: #232842;
+  --text: #F8FAFC;
+  --text-muted: #A1A1AA;
+  --border: #2A2F3D;
+  --success: #4ADE80;
+  --success-bg: #12291A;
+  --warning: #FBBF24;
+  --warning-bg: #2A2113;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-width: 320px;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition: background-color var(--ease), color var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+.share-wrap {
+  width: min(480px, 100%);
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.share-brand img { height: 34px; width: auto; }
+img.logo-dark { display: none; }
+[data-theme="dark"] img.logo-light { display: none; }
+[data-theme="dark"] img.logo-dark { display: block; }
+
+.share-card {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.share-bill-emoji { font-size: 2.4rem; margin: 0 0 12px; }
+.share-bill {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+}
+.share-payer { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+.share-payer strong { color: var(--text); }
+
+.share-amount-box {
+  margin-top: 24px;
+  padding: 22px 16px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+}
+.share-label {
+  margin: 0 0 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.share-amount {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--primary-dark);
+}
+[data-theme="dark"] .share-amount { color: var(--primary); }
+.share-status {
+  display: inline-block;
+  margin: 12px 0 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.share-status.is-paid { background: var(--success-bg); color: var(--success); }
+.share-due { margin: 10px 0 0; font-size: 0.85rem; color: var(--text-muted); }
+
+.share-skeleton {
+  height: 120px;
+  border-radius: 16px;
+  background: linear-gradient(100deg, var(--surface-soft) 40%, var(--border) 50%, var(--surface-soft) 60%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite linear;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.share-loading-text { color: var(--text-muted); font-size: 0.9rem; margin: 16px 0 0; }
+
+/* CTA: natural, bukan aggressive marketing */
+.share-cta {
+  width: 100%;
+  text-align: center;
+  padding: 8px 8px 0;
+}
+.share-cta-title { margin: 0 0 4px; font-weight: 800; font-size: 1.05rem; }
+.share-cta-sub { margin: 0 0 16px; color: var(--text-muted); font-size: 0.9rem; }
+.share-cta-note { margin: 12px 0 0; color: var(--text-muted); font-size: 0.78rem; }
+
+.btn-primary {
+  display: inline-block;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 13px 26px;
+  border-radius: 999px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform var(--ease), background-color var(--ease);
+}
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+
+[hidden] { display: none !important; }
+
+@media (min-width: 560px) {
+  .share-wrap { padding-top: 48px; }
+  .share-amount { font-size: 2.3rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-skeleton { animation: none; }
+  * { transition: none !important; }
+}
