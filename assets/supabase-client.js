@@ -89,6 +89,22 @@
         if (res.error) throw res.error;
       });
     },
+    resetPasswordForEmail: function (email, redirectTo) {
+      return client.auth
+        .resetPasswordForEmail(email, { redirectTo: redirectTo })
+        .then(function (res) {
+          if (res.error) throw res.error;
+        });
+    },
+    updateUser: function (attributes) {
+      return client.auth.updateUser(attributes).then(function (res) {
+        if (res.error) throw res.error;
+        return { user: toUser(res.data.user) };
+      });
+    },
+    onAuthStateChange: function (callback) {
+      return client.auth.onAuthStateChange(callback);
+    },
   });
 
   window.NyangkutAuth.mode = "real";

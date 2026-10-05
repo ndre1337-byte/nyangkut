@@ -22,7 +22,7 @@
       return "";
     },
     confirmPassword(value) {
-      if (!value) return "Ulangi password lo dulu.";
+      if (!value) return "Ulangi password kamu dulu.";
       if (value !== document.querySelector('[name="password"]').value) return "Password belum sama.";
       return "";
     },
@@ -57,14 +57,19 @@
 
   function friendlyError(error) {
     const message = String(error?.message || "").toLowerCase();
-    if (message.includes("rate limit") || message.includes("429")) {
+    const code = String(error?.error_code || error?.code || "").toLowerCase();
+    if (message.includes("rate limit") || message.includes("429") || message.includes("security purposes")
+        || code.includes("over_email_send_rate_limit") || code.includes("over_request_rate_limit")) {
       return "Lagi rame di server email. Tunggu beberapa menit, lalu coba lagi ya.";
     }
     if (message.includes("already") || message.includes("registered") || message.includes("exists")) {
       return "Email ini sudah terdaftar. Coba masuk saja, ya.";
     }
     if (message.includes("not confirmed") || message.includes("not verified")) {
-      return "Email lo belum diverifikasi. Cek inbox lo dulu, ya.";
+      return "Email kamu belum diverifikasi. Cek inbox kamu dulu, ya.";
+    }
+    if (message.includes("should be different")) {
+      return "Password baru harus beda dari password lama.";
     }
     if (message.includes("invalid") || message.includes("credential") || message.includes("password")) {
       return "Email atau password belum cocok. Coba periksa lagi.";
@@ -110,7 +115,7 @@
         if (page === "register") {
           const result = await auth.signUp({ name: data.name.trim(), email: data.email.trim(), password: data.password });
           if (result?.requiresEmailConfirmation) {
-            showNotice("Akun berhasil dibuat. Cek email lo untuk konfirmasi, lalu masuk ya.", "success");
+            showNotice("Akun berhasil dibuat. Cek email kamu untuk konfirmasi, lalu masuk ya.", "success");
             setBusy(false);
             return;
           }
@@ -153,5 +158,132 @@
         window.location.assign("/login/");
       }
     }));
+  }
+
+  if (page === "forgot-password") {
+    const fpForm = document.querySelector("[data-fp-form]");
+    const setFpState = (name) => {
+      document.querySelectorAll("[data-fp-state]").forEach((el) => {
+        el.hidden = el.dataset.fpState !== name;
+      });
+    };
+    if (fpForm) {
+      const emailInput = fpForm.querySelector('[name="email"]');
+      ["input", "blur"].forEach((evt) => emailInput.addEventListener(evt, () => validateField(emailInput, fpForm)));
+      let busy = false;
+      fpForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (busy) return;
+        showNotice("");
+        if (!validateField(emailInput, fpForm)) {
+          emailInput.focus();
+          return;
+        }
+        busy = true;
+        setBusy(true);
+        try {
+          const email = emailInput.value.trim();
+          await auth.resetPasswordForEmail(email, window.location.origin + "/reset-password");
+          setFpState("sent");
+        } catch (error) {
+          showNotice(friendlyError(error));
+          busy = false;
+          setBusy(false);
+        }
+      });
+    }
+  }
+
+  if (page === "reset-password") {
+    const pageTitle = document.getElementById("page-title");
+    const rpTitles = {
+      loading: "Buat password baru",
+      form: "Buat password baru",
+      success: "Password berhasil diubah",
+      invalid: "Buat password baru",
+    };
+    const setRpState = (name) => {
+      document.querySelectorAll("[data-rp-state]").forEach((el) => {
+        el.hidden = el.dataset.rpState !== name;
+      });
+      const title = rpTitles[name] || rpTitles.form;
+      if (pageTitle) pageTitle.textContent = title;
+      document.title = title + " — Nyangkut";
+    };
+    const cleanUrl = () => {
+      try {
+        window.history.replaceState(null, "", window.location.pathname + window.location.search);
+      } catch {
+        // abaikan: membersihkan token di URL itu opsional
+      }
+    };
+    let settled = false;
+    const settle = (ok) => {
+      if (settled) return;
+      settled = true;
+      if (ok) cleanUrl();
+      setRpState(ok ? "form" : "invalid");
+    };
+    const confirmSession = () => {
+      auth.getSession()
+        .then((session) => {
+          if (session && session.user) settle(true);
+        })
+        .catch(() => {});
+    };
+    auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") confirmSession();
+    });
+    auth.getSession()
+      .then((session) => {
+        if (session && session.user) {
+          settle(true);
+        } else {
+          window.setTimeout(() => settle(false), 2500);
+        }
+      })
+      .catch(() => settle(false));
+
+    const rpForm = document.querySelector("[data-rp-form]");
+    if (rpForm) {
+      const inputs = [...rpForm.querySelectorAll("input")];
+      inputs.forEach((input) => {
+        ["input", "blur"].forEach((evt) => input.addEventListener(evt, () => {
+          validateField(input, rpForm);
+          if (input.name === "password") {
+            const confirm = rpForm.querySelector('[name="confirmPassword"]');
+            if (confirm.value) validateField(confirm, rpForm);
+          }
+        }));
+      });
+      let busy = false;
+      rpForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (busy) return;
+        showNotice("");
+        const valid = inputs.map((input) => validateField(input, rpForm)).every(Boolean);
+        if (!valid) {
+          rpForm.querySelector('[aria-invalid="true"]')?.focus();
+          return;
+        }
+        busy = true;
+        setBusy(true);
+        try {
+          const password = rpForm.querySelector('[name="password"]').value;
+          await auth.updateUser({ password });
+          try {
+            await auth.signOut();
+          } catch {
+            // abaikan: yang penting password sudah terganti
+          }
+          inputs.forEach((input) => { input.value = ""; });
+          setRpState("success");
+        } catch (error) {
+          showNotice(friendlyError(error));
+          busy = false;
+          setBusy(false);
+        }
+      });
+    }
   }
 })();

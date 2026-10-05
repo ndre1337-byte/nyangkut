@@ -2,10 +2,10 @@
 <html lang="id">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#F8FAFC" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#6366F1" />
     <title>Detail Catatan — Nyangkut</title>
-    <link rel="icon" type="image/png" href="/assets/logo-mark.png" />
+    <link rel="icon" type="image/png" href="/assets/logo-mark.png?v=2" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
@@ -17,83 +17,140 @@
     <script defer src="/debt/debt.js"></script>
   </head>
   <body data-page="debt">
-    <div class="dash">
-      <header class="dash-top">
-        <a class="dash-brand" href="https://nyangkut.vercel.app/" aria-label="Nyangkut">
-          <img src="/assets/logo-mark.png" alt="" width="28" height="28" />
-          <span>Nyangkut</span>
+    <div class="app">
+      <aside class="sidebar" aria-label="Navigasi utama">
+        <a class="side-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut">
+          <img src="/assets/logo-nyangkut.png?v=2" alt="Nyangkut" />
         </a>
-        <button class="btn-ghost" type="button" data-sign-out>Keluar</button>
-      </header>
-
-      <main class="dash-main">
-        <a class="back-link" href="/dashboard/">← Kembali</a>
-
-        <div data-state="loading" class="tx-state">
-          <div class="spinner" aria-hidden="true"></div>
-          <p>Memuat catatan…</p>
+        <nav class="side-nav">
+          <a href="/dashboard/#top" class="side-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Dashboard</span>
+          </a>
+          <a href="/dashboard/#catatan" class="side-link is-active">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Catatan</span>
+          </a>
+          <a href="/dashboard/#kalender" class="side-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Kalender</span>
+          </a>
+        </nav>
+        <div class="side-secondary" aria-label="Menu lainnya">
+          <a href="/dashboard/#premium" class="side-link side-premium">
+            <span class="side-emoji" aria-hidden="true">✨</span>
+            <span>Nyangkut Premium</span>
+            <span class="segera-label">SEGERA</span>
+          </a>
+          <a href="https://www.nyangkut.id/" class="side-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span>Tentang Nyangkut</span>
+          </a>
+          <button class="side-link side-logout" type="button" data-sign-out>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Keluar</span>
+          </button>
         </div>
+      </aside>
 
-        <div data-state="error" class="tx-state" hidden>
-          <p class="tx-state-title">Yah, gagal memuat 😅</p>
-          <p class="tx-state-sub">Periksa koneksi lo, lalu coba lagi.</p>
-          <button class="btn-primary btn-sm" type="button" data-retry>Muat ulang</button>
-        </div>
+      <div class="main-wrap">
+        <main class="dash-main">
+          <a class="back-link" href="/dashboard/">← Kembali</a>
 
-        <div data-state="notfound" class="tx-state" hidden>
-          <p class="tx-state-emoji" aria-hidden="true">🔍</p>
-          <p class="tx-state-title">Catatan tidak ditemukan.</p>
-          <p class="tx-state-sub">Mungkin sudah dihapus atau bukan milik lo.</p>
-          <a class="btn-primary btn-sm" href="/dashboard/">Kembali ke dashboard</a>
-        </div>
-
-        <div data-state="detail" hidden>
-          <section class="detail-head">
-            <h1 data-d="person_name">—</h1>
-            <div class="detail-chips">
-              <span class="chip" data-d="dir_chip">—</span>
-              <span class="chip" data-d="status_chip">—</span>
-            </div>
-            <p class="detail-dir-sub" data-d="dir_sub"></p>
-          </section>
-
-          <section class="sisa-hero">
-            <p class="sisa-label">Sisa</p>
-            <p class="sisa-value" data-d="remaining">Rp0</p>
-            <p class="sisa-sub" data-d="sisa_sub"></p>
-          </section>
-
-          <div class="cta-row" data-cta-wrap>
-            <button class="btn-primary btn-block" type="button" data-add-payment>+ Catat Pembayaran</button>
+          <div data-state="loading" class="tx-state">
+            <div class="spinner" aria-hidden="true"></div>
+            <p>Memuat catatan…</p>
           </div>
 
-          <section class="detail-card">
-            <h2>Detail transaksi</h2>
-            <dl class="detail-grid">
-              <div><dt>Total</dt><dd data-d="amount">—</dd></div>
-              <div><dt>Sudah dibayar</dt><dd data-d="paid">—</dd></div>
-              <div><dt>Jatuh tempo</dt><dd data-d="due">—</dd></div>
-            </dl>
-            <div class="detail-note" data-note-wrap hidden>
-              <p class="detail-note-label">Catatan</p>
-              <p class="detail-note-text" data-d="note"></p>
+          <div data-state="error" class="tx-state" hidden>
+            <p class="tx-state-title">Yah, gagal memuat 😅</p>
+            <p class="tx-state-sub">Periksa koneksi kamu, lalu coba lagi.</p>
+            <button class="btn-primary btn-sm" type="button" data-retry>Muat ulang</button>
+          </div>
+
+          <div data-state="notfound" class="tx-state" hidden>
+            <p class="tx-state-emoji" aria-hidden="true">🔍</p>
+            <p class="tx-state-title">Catatan tidak ditemukan.</p>
+            <p class="tx-state-sub">Mungkin sudah dihapus atau bukan milik kamu.</p>
+            <a class="btn-primary btn-sm" href="/dashboard/">Kembali ke dashboard</a>
+          </div>
+
+          <div data-state="detail" hidden>
+            <section class="detail-hero">
+              <div class="detail-hero-top">
+                <span class="tx-avatar" data-avatar aria-hidden="true">?</span>
+                <div class="detail-hero-text">
+                  <h1 data-d="person_name">—</h1>
+                  <p class="detail-dir-sub" data-d="dir_sub"></p>
+                </div>
+              </div>
+              <div class="detail-chips">
+                <span class="chip" data-d="dir_chip">—</span>
+                <span class="chip" data-d="status_chip">—</span>
+              </div>
+              <div class="sisa-box">
+                <p class="sisa-label">Sisa</p>
+                <p class="sisa-value" data-d="remaining">Rp0</p>
+                <p class="sisa-sub" data-d="sisa_sub"></p>
+              </div>
+            </section>
+
+            <div class="cta-row" data-cta-wrap>
+              <button class="btn-wa btn-block" type="button" data-wa-remind hidden>💬 Ingatkan via WhatsApp</button>
+              <button class="btn-primary btn-block" type="button" data-add-payment>+ Catat Pembayaran</button>
+              <button class="btn-ghost btn-block" type="button" data-mark-paid>✓ Tandai Lunas</button>
             </div>
-          </section>
 
-          <section class="history-card">
-            <h2>Riwayat pembayaran</h2>
-            <p class="history-empty" data-history-empty hidden>Belum ada pembayaran.</p>
-            <ul class="history-list" data-history-list></ul>
-          </section>
-        </div>
-      </main>
+            <section class="detail-card">
+              <h2>Detail transaksi</h2>
+              <dl class="detail-grid">
+                <div class="detail-row"><dt>Total</dt><dd data-d="amount">—</dd></div>
+                <div class="detail-row"><dt>Sudah dibayar</dt><dd data-d="paid">—</dd></div>
+                <div class="detail-row"><dt>Jatuh tempo</dt><dd data-d="due">—</dd></div>
+              </dl>
+              <div class="detail-note" data-note-wrap hidden>
+                <p class="detail-note-label">Catatan</p>
+                <p class="detail-note-text" data-d="note"></p>
+              </div>
+              <p class="detail-recur" data-recur-badge hidden>🔁 Dibuat otomatis dari catatan setiap bulan</p>
+            </section>
 
-      <footer class="dash-foot">Nyangkut · Biar nggak lupa uang lo masih nyangkut di mana.</footer>
+            <section class="history-card">
+              <h2>Riwayat pembayaran</h2>
+              <p class="history-empty" data-history-empty hidden>Belum ada pembayaran.</p>
+              <ul class="history-list" data-history-list></ul>
+            </section>
+
+            <div class="danger-zone" data-danger-wrap hidden>
+              <button class="btn-danger-ghost btn-block" type="button" data-delete-debt>🗑️ Hapus catatan ini</button>
+              <p class="danger-hint">Catatan yang sudah lunas bisa dihapus biar daftar tetap rapi.</p>
+            </div>
+          </div>
+        </main>
+
+        <footer class="dash-foot">Nyangkut · Biar nggak lupa uang kamu masih nyangkut di mana.</footer>
+      </div>
+
+      <nav class="bottom-nav" aria-label="Navigasi bawah">
+        <a href="/dashboard/#top" class="bn-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="/dashboard/#catatan" class="bn-link is-active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span>Catatan</span>
+        </a>
+        <a href="/dashboard/#kalender" class="bn-link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Kalender</span>
+        </a>
+      </nav>
     </div>
 
     <!-- modal catat pembayaran -->
     <div class="modal-backdrop" data-pay-modal hidden>
       <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+        <div class="sheet-handle modal-handle" aria-hidden="true"></div>
         <div class="form-head">
           <h2 id="pay-title">Catat Pembayaran</h2>
           <button class="btn-icon" type="button" data-pay-close aria-label="Tutup">✕</button>
@@ -127,15 +184,71 @@
       </div>
     </div>
 
-    <!-- modal konfirmasi hapus -->
+    <!-- modal ingatkan via WhatsApp -->
+    <div class="modal-backdrop" data-wa-modal hidden>
+      <div class="modal modal-form" role="dialog" aria-modal="true" aria-labelledby="wa-title">
+        <div class="sheet-handle modal-handle" aria-hidden="true"></div>
+        <div class="form-head">
+          <h2 id="wa-title">Ingatkan via WhatsApp</h2>
+          <button class="btn-icon" type="button" data-wa-close aria-label="Tutup">✕</button>
+        </div>
+        <div class="wa-preview" data-wa-preview-wrap hidden>
+          <p class="wa-preview-label">Pesan yang akan dikirim:</p>
+          <p class="wa-preview-text" data-wa-preview></p>
+        </div>
+        <form data-wa-form novalidate>
+          <div class="field">
+            <label class="field-label" for="wa-phone">Nomor WhatsApp</label>
+            <input id="wa-phone" type="tel" inputmode="tel" placeholder="0812xxxxxxx" autocomplete="off" />
+            <p class="field-error" data-wa-error hidden>Nomor WhatsApp belum valid.</p>
+          </div>
+          <p class="wa-privacy">Nomor ini hanya digunakan untuk membuka WhatsApp dan tidak disimpan oleh Nyangkut.</p>
+          <div class="form-actions">
+            <button type="button" class="btn-ghost" data-wa-close>Batal</button>
+            <button type="submit" class="btn-wa" data-wa-submit>Buka WhatsApp</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- modal konfirmasi hapus pembayaran -->
     <div class="modal-backdrop" data-del-modal hidden>
-      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="del-title">
+      <div class="modal modal-confirm" role="dialog" aria-modal="true" aria-labelledby="del-title">
+        <div class="sheet-handle modal-handle" aria-hidden="true"></div>
         <p class="tx-state-emoji" aria-hidden="true">🗑️</p>
         <h2 id="del-title">Hapus pembayaran?</h2>
         <p data-del-text>Yakin hapus pembayaran ini?</p>
         <div class="form-actions">
           <button type="button" class="btn-ghost" data-del-close>Batal</button>
           <button type="button" class="btn-danger" data-del-confirm>Ya, hapus</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- modal konfirmasi tandai lunas -->
+    <div class="modal-backdrop" data-paid-modal hidden>
+      <div class="modal modal-confirm" role="dialog" aria-modal="true" aria-labelledby="paid-title">
+        <div class="sheet-handle modal-handle" aria-hidden="true"></div>
+        <p class="tx-state-emoji" aria-hidden="true">🎉</p>
+        <h2 id="paid-title">Tandai lunas?</h2>
+        <p data-paid-text>Yakin tandai catatan ini sebagai lunas?</p>
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" data-paid-close>Batal</button>
+          <button type="button" class="btn-primary" data-paid-confirm>Ya, lunaskan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- modal konfirmasi hapus catatan -->
+    <div class="modal-backdrop" data-debt-del-modal hidden>
+      <div class="modal modal-confirm" role="dialog" aria-modal="true" aria-labelledby="debt-del-title">
+        <div class="sheet-handle modal-handle" aria-hidden="true"></div>
+        <p class="tx-state-emoji" aria-hidden="true">🗑️</p>
+        <h2 id="debt-del-title">Hapus catatan?</h2>
+        <p data-debt-del-text>Hapus catatan ini? Riwayat pembayaran dan detail transaksi akan ikut dihapus.</p>
+        <div class="form-actions">
+          <button type="button" class="btn-ghost" data-debt-del-close>Batal</button>
+          <button type="button" class="btn-danger" data-debt-del-confirm>Ya, hapus</button>
         </div>
       </div>
     </div>

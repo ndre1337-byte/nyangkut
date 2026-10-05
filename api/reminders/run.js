@@ -1,254 +1,424 @@
-/* Nyangkut — Email Reminder MVP (H-1 & H+1).
+/**
+ * Nyangkut reminder cron — GET /api/reminders/run
+ * Dijalankan Vercel Cron 1x sehari 03:00 UTC (= 10:00 WIB).
  *
- * Dijalankan sebagai Vercel Cron 1x sehari (00:00 UTC = 07:00 WIB) via
- * GET /api/reminders/run dengan header Authorization: Bearer <CRON_SECRET>.
+ * BASIC (Free): H-1 (before_due_1d) + H+1 (overdue_1d) untuk semua catatan.
+ * ADVANCED (Premium/Early Access): preset H-7, H-3, H-1, Hari H, H+1
+ *   sesuai debts.reminder_offsets milik user. Config diabaikan untuk
+ *   user non-premium (fallback ke basic).
  *
- * SERVER-SIDE ONLY. File ini tidak pernah dikirim ke browser.
- * Pakai service_role key (bypass RLS) — JANGAN taruh key ini di frontend,
- * JANGAN commit ke GitHub (via Vercel env vars saja).
+ * Alur per offset: hitung target -> cari debt jatuh tempo di target
+ * yang effective-offsets-nya mencakup offset ini -> stage
+ * (debt_id, type) -> kirim yang masih pending -> tandai sent_at.
  *
- * Timezone: Asia/Jakarta (WIB), konsisten untuk H-1 / H+1 / current_date.
- * Tidak ada sistem timezone per-user di MVP.
- *
- * Anti-duplikat: UNIQUE(debt_id, type) di database + hanya kirim yang
- * sent_at IS NULL. sent_at diisi HANYA setelah Resend 2xx.
- *
- * Query param opsional: ?dry_run=1 → jalankan semua logika TANPA kirim
- * email dan TANPA menandai sent_at (untuk test).
+ * Anti-duplikat: UNIQUE(debt_id, type) di DB + insert ignore-duplicates.
+ * Debt lunas sebelum kirim -> difilter, tidak dikirim.
+ * Email SELALU ke pemilik akun, tidak pernah ke person_name.
  */
 
-const SUPABASE_URL = (process.env.SUPABASE_URL || "https://adpteropqkbbdtpfwkhh.supabase.co").replace(/\/$/, "");
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const RESEND_KEY = process.env.RESEND_API_KEY;
-const FROM = process.env.REMINDER_FROM_EMAIL || "Nyangkut <onboarding@resend.dev>";
-const CRON_SECRET = process.env.CRON_SECRET;
-const APP_URL = "https://nyangkut.vercel.app";
+// Cron: "0 3 * * *" (03:00 UTC = 10:00 WIB).
+// NOTE: tipe due_today yang tadinya sementara kini permanen sebagai
+// preset "Hari H" untuk Advanced Reminder (Premium).
 
-const TYPES = {
-  before_due_1d: {
-    dayOffset: 1,
-    subject: "Besok ada uang yang perlu lo ingat",
-    subjectMulti: (n) => `Besok ada ${n} catatan yang perlu lo ingat`,
+var SUPABASE_URL = (process.env.SUPABASE_URL || "https://adpteropqkbbdtpfwkhh.supabase.co").replace(/\/$/, "");
+var SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+var CRON_SECRET = process.env.CRON_SECRET;
+var RESEND_API_KEY = process.env.RESEND_API_KEY;
+var FROM_EMAIL =
+  process.env.REMINDER_FROM_EMAIL || "Nyangkut.id <nyangkut@cvmudah.id>";
+var APP_URL = "https://www.nyangkut.id";
+
+/** offset: hari relatif ke due_date. target = today - offset. */
+var OFFSETS = [
+  {
+    offset: -7,
+    type: "before_due_7d",
+    label: "H-7",
+    subject: "7 hari lagi ada yang jatuh tempo",
+    subjectMulti: function (n) {
+      return "7 hari lagi ada " + n + " catatan yang jatuh tempo";
+    },
+    intro: "7 hari lagi ada catatan yang jatuh tempo.",
+  },
+  {
+    offset: -3,
+    type: "before_due_3d",
+    label: "H-3",
+    subject: "3 hari lagi ada yang jatuh tempo",
+    subjectMulti: function (n) {
+      return "3 hari lagi ada " + n + " catatan yang jatuh tempo";
+    },
+    intro: "3 hari lagi ada catatan yang jatuh tempo.",
+  },
+  {
+    offset: -1,
+    type: "before_due_1d",
+    label: "H-1",
+    subject: "Besok ada uang yang perlu kamu ingat",
+    subjectMulti: function (n) {
+      return "Besok ada " + n + " catatan yang perlu kamu ingat";
+    },
     intro: "Besok ada catatan yang jatuh tempo.",
   },
-  overdue_1d: {
-    dayOffset: -1,
-    subject: "Eh, ada catatan yang belum lunas",
-    subjectMulti: (n) => `Eh, ada ${n} catatan yang belum lunas`,
-    intro: "Ada catatan yang sudah lewat jatuh tempo dan masih belum lunas.",
+  {
+    offset: 0,
+    type: "due_today",
+    label: "Hari H",
+    subject: "Hari ini ada yang jatuh tempo",
+    subjectMulti: function (n) {
+      return "Hari ini ada " + n + " catatan yang jatuh tempo";
+    },
+    intro: "Hari ini ada catatan yang jatuh tempo.",
   },
-};
+  {
+    offset: 1,
+    type: "overdue_1d",
+    label: "H+1",
+    subject: "Eh, ada catatan yang belum lunas",
+    subjectMulti: function (n) {
+      return "Eh, ada " + n + " catatan yang belum lunas";
+    },
+    intro: "Kemarin ada catatan yang jatuh tempo dan belum lunas.",
+  },
+];
 
-/* ---------- helpers ---------- */
+/** Offset dasar untuk Free / tanpa config. */
+var BASIC_OFFSETS = [-1, 1];
 
 function wibToday() {
-  // YYYY-MM-DD di Asia/Jakarta
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jakarta" }).format(new Date());
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
-function addDays(iso, n) {
-  const d = new Date(iso + "T12:00:00Z");
+function addDays(dateStr, n) {
+  var d = new Date(dateStr + "T00:00:00Z");
   d.setUTCDate(d.getUTCDate() + n);
   return d.toISOString().slice(0, 10);
 }
 
 function rupiah(n) {
-  return "Rp" + Number(n || 0).toLocaleString("id-ID", { maximumFractionDigits: 0 });
+  return (
+    "Rp" + Number(n || 0).toLocaleString("id-ID", { maximumFractionDigits: 0 })
+  );
 }
 
-const BULAN = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
-  "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-
-function tglPanjang(iso) {
-  const p = String(iso).slice(0, 10).split("-");
-  return `${parseInt(p[2], 10)} ${BULAN[parseInt(p[1], 10) - 1]} ${p[0]}`;
+function fmtDate(iso) {
+  if (!iso) return "-";
+  var months = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+  ];
+  var p = iso.split("-");
+  return Number(p[2]) + " " + months[Number(p[1]) - 1] + " " + p[0];
 }
 
-function esc(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+function escapeHtml(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
-async function sb(path, opts = {}) {
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    ...opts,
-    headers: {
-      apikey: SERVICE_KEY,
-      Authorization: `Bearer ${SERVICE_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-      ...(opts.headers || {}),
+function sb(path, params, init) {
+  var url =
+    SUPABASE_URL.replace(/\/$/, "") + "/rest/v1/" + path +
+    (params ? "?" + params : "");
+  return fetch(url, Object.assign(
+    {
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: "Bearer " + SERVICE_KEY,
+        "Content-Type": "application/json",
+      },
     },
-  });
-  const text = await r.text();
-  let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { /* abaikan */ }
-  if (!r.ok) throw new Error(`Supabase ${r.status}: ${text.slice(0, 300)}`);
-  return data;
+    init || {}
+  ));
 }
 
-async function sbAdmin(path) {
-  const r = await fetch(`${SUPABASE_URL}/auth/v1/admin/${path}`, {
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
-  });
-  const text = await r.text();
-  if (!r.ok) throw new Error(`Auth admin ${r.status}: ${text.slice(0, 300)}`);
-  try { return JSON.parse(text); } catch { return text; }
-}
-
-async function userEmails() {
-  const map = {};
-  let page = 1;
-  while (page <= 10) {
-    const res = await sbAdmin(`users?page=${page}&per_page=100`);
-    const arr = Array.isArray(res) ? res : res.users || [];
-    arr.forEach((u) => { if (u.id && u.email) map[u.id] = u.email; });
-    if (arr.length < 100) break;
-    page += 1;
-  }
-  return map;
+function buildEmail(cfg, items) {
+  var rows = items
+    .map(function (it) {
+      var dirTxt =
+        it.direction === "receivable"
+          ? "Uang yang harus balik ke kamu"
+          : "Uang yang harus kamu bayar";
+      return (
+        '<tr><td style="padding:12px 0;border-bottom:1px solid #eef2ff;">' +
+        '<div style="font-weight:700;color:#111827;">' + escapeHtml(it.person_name) + "</div>" +
+        '<div style="font-size:13px;color:#6b7280;margin-top:2px;">' + dirTxt + "</div>" +
+        '<div style="font-size:13px;color:#6b7280;">Jatuh tempo: ' + fmtDate(it.due_date) + "</div>" +
+        '<div style="font-size:15px;font-weight:700;color:#4f46e5;margin-top:4px;">Sisa: ' + rupiah(it.sisa) + "</div>" +
+        "</td></tr>"
+      );
+    })
+    .join("");
+  var subject = items.length === 1 ? cfg.subject : cfg.subjectMulti(items.length);
+  var html =
+    '<div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;">' +
+    '<div style="font-size:20px;font-weight:800;color:#4f46e5;margin-bottom:8px;">Nyangkut.id</div>' +
+    "<p>" + escapeHtml(cfg.intro) + "</p>" +
+    '<table style="width:100%;border-collapse:collapse;">' + rows + "</table>" +
+    '<p style="margin-top:20px;"><a href="' + APP_URL + '/dashboard/" ' +
+    'style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-weight:700;">' +
+    "Lihat di Nyangkut.id</a></p>" +
+    '<p style="font-size:12px;color:#9ca3af;">Biar nggak lupa uang kamu masih nyangkut di mana.</p>' +
+    "</div>";
+  return { subject: subject, html: html };
 }
 
 async function sendEmail(to, subject, html) {
-  const r = await fetch("https://api.resend.com/emails", {
+  var res = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: FROM, to: [to], subject, html }),
+    headers: {
+      Authorization: "Bearer " + RESEND_API_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ from: FROM_EMAIL, to: to, subject: subject, html: html }),
   });
-  const text = await r.text();
-  if (!r.ok) throw new Error(`Resend ${r.status}: ${text.slice(0, 300)}`);
-  return text;
+  if (!res.ok) {
+    var t = await res.text().catch(function () { return ""; });
+    throw new Error("Resend " + res.status + ": " + t.slice(0, 200));
+  }
 }
 
-/* ---------- template email (clean, mobile-friendly) ---------- */
-
-function buildEmail(type, items) {
-  const cfg = TYPES[type];
-  const subject = items.length > 1 ? cfg.subjectMulti(items.length) : cfg.subject;
-  const total = items.reduce((a, d) => a + d.sisa, 0);
-  const link = items.length === 1 ? items[0].link : `${APP_URL}/dashboard/`;
-
-  const rows = items.map((d) => `
-      <div style="padding:12px 0;border-bottom:1px solid #eef2ff;">
-        <div style="font-size:16px;font-weight:700;color:#111827;">${esc(d.person_name)}</div>
-        <div style="font-size:20px;font-weight:800;color:#4f46e5;margin:4px 0;">${rupiah(d.sisa)}</div>
-        <div style="font-size:13px;color:#64748b;">Jatuh tempo: ${tglPanjang(d.due_date)}</div>
-        <div style="font-size:13px;color:#64748b;">Sisa: ${rupiah(d.sisa)}</div>
-      </div>`).join("");
-
-  const html = `<!doctype html><html><body style="margin:0;padding:0;background:#f8fafc;">
-  <div style="max-width:480px;margin:0 auto;padding:24px 20px;font-family:-apple-system,'Segoe UI',sans-serif;color:#111827;">
-    <div style="font-size:20px;font-weight:800;color:#4f46e5;margin-bottom:12px;">Nyangkut</div>
-    <p style="font-size:15px;line-height:1.6;">${cfg.intro}</p>
-    ${rows}
-    <p style="font-size:15px;margin-top:12px;">Total: <strong>${rupiah(total)}</strong></p>
-    <a href="${link}" style="display:inline-block;margin:16px 0;padding:12px 28px;background:#6366f1;color:#ffffff;text-decoration:none;font-weight:700;border-radius:12px;">Buka Nyangkut</a>
-    <p style="font-size:12px;color:#94a3b8;line-height:1.6;border-top:1px solid #e2e8f0;padding-top:12px;">Email ini adalah pengingat pribadi dari Nyangkut. Nyangkut tidak menghubungi orang yang tercatat di transaksi lo.</p>
-  </div></body></html>`;
-
-  return { subject, html, link, total };
-}
-
-/* ---------- handler ---------- */
-
-module.exports = async (req, res) => {
-  try {
-    if (!CRON_SECRET) {
-      return res.status(500).json({ ok: false, error: "CRON_SECRET belum dikonfigurasi" });
-    }
-    if ((req.headers.authorization || "") !== `Bearer ${CRON_SECRET}`) {
-      return res.status(401).json({ ok: false, error: "unauthorized" });
-    }
-    if (!SERVICE_KEY || !RESEND_KEY) {
-      return res.status(500).json({ ok: false, error: "SUPABASE_SERVICE_ROLE_KEY / RESEND_API_KEY belum dikonfigurasi" });
-    }
-
-    const dry = req.query.dry_run === "1" || req.query.dry_run === "true";
-    const today = wibToday();
-    const emails = userEmails();
-    const out = { ok: true, date_wib: today, dry_run: dry, types: {}, emails: [] };
-    const emailOf = await emails;
-
-    for (const [type, cfg] of Object.entries(TYPES)) {
-      const target = addDays(today, cfg.dayOffset);
-      const stat = { target_date: target, candidates: 0, staged: 0, users_emailed: 0, skipped_no_email: 0 };
-      out.types[type] = stat;
-
-      // 1. Kandidat: due_date = target, belum lunas, sisa > 0.
-      const debts = await sb(
-        `debts?select=id,user_id,person_name,direction,amount,paid_amount,status,due_date` +
-        `&due_date=eq.${target}&status=neq.paid&order=user_id`
-      ) || [];
-      const eligible = debts.filter((d) => Number(d.amount) - Number(d.paid_amount) > 0);
-      stat.candidates = eligible.length;
-
-      // 2. Stage reminder per debt. Konflik unique = sudah pernah → abaikan.
-      for (const d of eligible) {
-        try {
-          await sb("reminders", {
-            method: "POST",
-            headers: { Prefer: "resolution=ignore-duplicates" },
-            body: JSON.stringify({ debt_id: d.id, user_id: d.user_id, type, scheduled_for: today }),
-          });
-          stat.staged += 1;
-        } catch (e) {
-          // 409/unique violation → sudah ada, lewati
+async function getUserEmails(userIds) {
+  var map = {};
+  await Promise.all(
+    userIds.map(async function (uid) {
+      try {
+        var r = await fetch(
+          SUPABASE_URL.replace(/\/$/, "") + "/auth/v1/admin/users/" + uid,
+          {
+            headers: {
+              apikey: SERVICE_KEY,
+              Authorization: "Bearer " + SERVICE_KEY,
+            },
+          }
+        );
+        if (r.ok) {
+          var u = await r.json();
+          if (u.email) map[uid] = u.email;
         }
+      } catch (e) { /* user gagal -> skip, user lain tetap jalan */ }
+    })
+  );
+  return map;
+}
+
+/** Set user_id yang berhak atas Advanced Reminder. */
+async function getPremiumUserIds() {
+  var set = {};
+  try {
+    var r = await sb("profiles", "select=id,early_access,plan");
+    if (!r.ok) return set;
+    var rows = await r.json();
+    rows.forEach(function (p) {
+      if (p.early_access === true || p.plan === "premium") set[p.id] = true;
+    });
+  } catch (e) { /* gagal -> semua dianggap basic (fail closed) */ }
+  return set;
+}
+
+/**
+ * Effective offsets untuk satu debt.
+ * - Premium + config terisi -> pakai config.
+ * - Selain itu -> BASIC_OFFSETS (H-1 + H+1).
+ */
+function effectiveOffsets(debt, premiumSet) {
+  if (
+    premiumSet[debt.user_id] &&
+    Array.isArray(debt.reminder_offsets) &&
+    debt.reminder_offsets.length > 0
+  ) {
+    return debt.reminder_offsets;
+  }
+  return BASIC_OFFSETS;
+}
+
+module.exports = async function handler(req, res) {
+  if (req.method !== "GET") {
+    res.status(405).json({ ok: false, error: "method_not_allowed" });
+    return;
+  }
+  var auth = req.headers.authorization || "";
+  if (!CRON_SECRET || auth !== "Bearer " + CRON_SECRET) {
+    res.status(401).json({ ok: false, error: "unauthorized" });
+    return;
+  }
+  if (!SUPABASE_URL || !SERVICE_KEY || !RESEND_API_KEY) {
+    res.status(500).json({ ok: false, error: "missing_env" });
+    return;
+  }
+
+  var dryRun = req.query && (req.query.dry_run === "1" || req.query.dry_run === "true");
+  var today = wibToday();
+  var report = { ok: true, date: today, dry_run: dryRun, offsets: [] };
+
+  try {
+    // Probe: apakah kolom reminder_offsets sudah ada (migration 007)?
+    // Kalau belum, cron tetap jalan dengan basic reminder (H-1 + H+1).
+    var advancedReady = false;
+    try {
+      var probe = await sb("debts", "select=reminder_offsets&limit=1");
+      advancedReady = probe.ok;
+    } catch (e) { advancedReady = false; }
+    report.advanced_ready = advancedReady;
+
+    var activeOffsets = advancedReady
+      ? OFFSETS
+      : OFFSETS.filter(function (c) { return BASIC_OFFSETS.indexOf(c.offset) !== -1; });
+
+    var premiumSet = await getPremiumUserIds();
+
+    for (var i = 0; i < activeOffsets.length; i++) {
+      var cfg = activeOffsets[i];
+      var target = addDays(today, -cfg.offset);
+      var offReport = {
+        offset: cfg.offset,
+        type: cfg.type,
+        target: target,
+        staged: 0,
+        sent: 0,
+        failed: 0,
+        skipped: 0,
+      };
+
+      // 1. Cari debt yang jatuh tempo tepat di target.
+      var debtSel = advancedReady
+        ? "select=id,user_id,direction,person_name,amount,paid_amount,status,due_date,reminder_offsets"
+        : "select=id,user_id,direction,person_name,amount,paid_amount,status,due_date";
+      var dr = await sb(
+        "debts",
+        debtSel + "&due_date=eq." + target + "&status=neq.paid"
+      );
+      if (!dr.ok) throw new Error("fetch debts " + dr.status);
+      var debts = (await dr.json()).filter(function (d) {
+        // Hanya stage jika offset ini termasuk effective offsets debt.
+        return effectiveOffsets(d, premiumSet).indexOf(cfg.offset) !== -1;
+      });
+
+      // 2. Stage (debt_id, type) — duplikat diabaikan DB.
+      if (debts.length > 0) {
+        var rows = debts.map(function (d) {
+          return {
+            debt_id: d.id,
+            user_id: d.user_id,
+            type: cfg.type,
+            scheduled_for: today,
+          };
+        });
+        var sr = await sb("reminders", "", {
+          method: "POST",
+          headers: {
+            apikey: SERVICE_KEY,
+            Authorization: "Bearer " + SERVICE_KEY,
+            "Content-Type": "application/json",
+            Prefer: "resolution=ignore-duplicates",
+          },
+          body: JSON.stringify(rows),
+        });
+        if (!sr.ok && sr.status !== 409) {
+          throw new Error("stage " + cfg.type + " " + sr.status);
+        }
+        offReport.staged = debts.length;
       }
 
-      // 3. Ambil semua yang BELUM terkirim (termasuk retry dari run sebelumnya),
-      //    gabung data debt terkini.
-      const pending = await sb(
-        `reminders?select=id,debt_id,user_id,` +
-        `debts(id,person_name,direction,amount,paid_amount,status,due_date)` +
-        `&sent_at=is.null&type=eq.${type}`
-      ) || [];
+      // 3. Ambil semua pending untuk tipe ini (termasuk sisa kemarin yg gagal).
+      var pr = await sb(
+        "reminders",
+        "select=id,debt_id,user_id" +
+          "&type=eq." + cfg.type +
+          "&sent_at=is.null"
+      );
+      if (!pr.ok) throw new Error("fetch pending " + pr.status);
+      var pending = await pr.json();
 
-      // 4. Filter ulang saat kirim: debt harus masih belum lunas & sisa > 0.
-      const sendable = pending.filter((r) => {
-        const d = r.debts;
-        return d && d.status !== "paid" && Number(d.amount) - Number(d.paid_amount) > 0;
-      });
-
-      // 5. Group per user → SATU email per user.
-      const byUser = {};
-      sendable.forEach((r) => {
-        const d = r.debts;
-        const sisa = Number(d.amount) - Number(d.paid_amount);
-        (byUser[r.user_id] = byUser[r.user_id] || []).push({
-          reminder_id: r.id,
-          id: d.id, person_name: d.person_name, due_date: d.due_date,
-          sisa, link: `${APP_URL}/debt/?id=${d.id}`,
+      // 4. Filter yang masih relevan (belum lunas, sisa > 0).
+      var sendable = [];
+      if (pending.length > 0) {
+        var ids = pending.map(function (p) { return p.debt_id; });
+        var qr = await sb(
+          "debts",
+          "select=id,user_id,direction,person_name,amount,paid_amount,status,due_date" +
+            "&id=in.(" + ids.join(",") + ")" +
+            "&status=neq.paid"
+        );
+        if (!qr.ok) throw new Error("fetch debts detail " + qr.status);
+        var debtMap = {};
+        (await qr.json()).forEach(function (d) { debtMap[d.id] = d; });
+        pending.forEach(function (p) {
+          var d = debtMap[p.debt_id];
+          if (!d) { offReport.skipped++; return; }
+          var sisa = Number(d.amount) - Number(d.paid_amount);
+          if (sisa <= 0) { offReport.skipped++; return; }
+          sendable.push({
+            reminder_id: p.id,
+            user_id: p.user_id,
+            person_name: d.person_name,
+            direction: d.direction,
+            due_date: d.due_date,
+            sisa: sisa,
+          });
         });
-      });
+      }
 
-      for (const [userId, items] of Object.entries(byUser)) {
-        const to = emailOf[userId];
-        if (!to) { stat.skipped_no_email += 1; continue; }
-        const { subject, html, link, total } = buildEmail(type, items);
-        const preview = {
-          type, to, subject, total_rp: rupiah(total), link,
-          debts: items.map((i) => ({ person_name: i.person_name, sisa_rp: rupiah(i.sisa), due: i.due_date })),
-          sent: false,
-        };
-        if (!dry) {
-          await sendEmail(to, subject, html); // throw kalau gagal → sent_at TETAP null
-          const ids = items.map((i) => i.reminder_id).join(",");
-          await sb(`reminders?id=in.(${ids})`, {
+      // 5. Group 1 email per user.
+      var byUser = {};
+      sendable.forEach(function (s) {
+        (byUser[s.user_id] = byUser[s.user_id] || []).push(s);
+      });
+      var userIds = Object.keys(byUser);
+
+      if (dryRun) {
+        offReport.would_send = userIds.map(function (uid) {
+          return { user_id: uid, items: byUser[uid].length };
+        });
+        report.offsets.push(offReport);
+        continue;
+      }
+
+      var emails = await getUserEmails(userIds);
+      var okIds = [];
+      var failCount = 0;
+
+      for (var u = 0; u < userIds.length; u++) {
+        var uid = userIds[u];
+        var items = byUser[uid];
+        var to = emails[uid];
+        if (!to) { failCount += items.length; continue; }
+        try {
+          var email = buildEmail(cfg, items);
+          await sendEmail(to, email.subject, email.html);
+          items.forEach(function (it) { okIds.push(it.reminder_id); });
+          offReport.sent += items.length;
+        } catch (e) {
+          failCount += items.length;
+        }
+      }
+      offReport.failed = failCount;
+
+      // 6. Tandai terkirim (hanya yang sukses).
+      if (okIds.length > 0) {
+        await sb(
+          "reminders",
+          "id=in.(" + okIds.join(",") + ")",
+          {
             method: "PATCH",
             body: JSON.stringify({ sent_at: new Date().toISOString() }),
-          });
-          preview.sent = true;
-          stat.users_emailed += 1;
-        }
-        out.emails.push(preview);
+          }
+        );
       }
+
+      report.offsets.push(offReport);
     }
 
-    return res.status(200).json(out);
-  } catch (err) {
-    console.error("[reminders]", err);
-    return res.status(500).json({ ok: false, error: String((err && err.message) || err).slice(0, 300) });
+    res.status(200).json(report);
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String((e && e.message) || e) });
   }
 };

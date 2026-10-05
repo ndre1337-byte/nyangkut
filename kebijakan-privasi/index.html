@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#6366F1" />
+    <title>Kebijakan Privasi — Nyangkut.id</title>
+    <link rel="icon" type="image/png" href="/assets/logo-mark.png?v=2" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/legal/legal.css" />
+  </head>
+  <body>
+    <header class="legal-top">
+      <a class="legal-brand" href="https://www.nyangkut.id/" aria-label="Nyangkut.id">
+        <img src="/assets/logo-nyangkut.png?v=2" alt="Nyangkut.id" />
+      </a>
+    </header>
+
+    <main class="legal-main">
+      <p class="legal-kicker">Dokumen Legal</p>
+      <h1>Kebijakan Privasi Nyangkut.id</h1>
+      <p class="legal-updated">Terakhir diperbarui: 5 Oktober 2026</p>
+
+      <p class="legal-intro">
+        Kebijakan Privasi ini menjelaskan data apa yang diproses oleh Nyangkut.id,
+        untuk apa data tersebut digunakan, dan apa yang tidak kami lakukan terhadap
+        datamu.
+      </p>
+
+      <section>
+        <h2>1. Data yang Diproses</h2>
+
+        <h3>Informasi akun</h3>
+        <p>Untuk menyediakan layanan, Nyangkut.id memproses:</p>
+        <ul>
+          <li>nama yang kamu berikan;</li>
+          <li>alamat email untuk autentikasi;</li>
+          <li>informasi autentikasi yang diperlukan untuk menjaga keamanan sesi login.</li>
+        </ul>
+
+        <h3>Data transaksi</h3>
+        <p>Data yang kamu catat melalui fitur Nyangkut.id, meliputi:</p>
+        <ul>
+          <li>nama pihak terkait transaksi;</li>
+          <li>nominal transaksi;</li>
+          <li>jumlah yang sudah dibayar;</li>
+          <li>riwayat pembayaran;</li>
+          <li>tanggal jatuh tempo (jika kamu mengisinya);</li>
+          <li>catatan tambahan;</li>
+          <li>arah transaksi (<em>receivable</em> / <em>payable</em>) dan status terkait.</li>
+        </ul>
+        <p>
+          Kami hanya memproses data yang memang diperlukan oleh fitur yang kamu gunakan.
+        </p>
+      </section>
+
+      <section>
+        <h2>2. Fitur WA Tagih — Nomor WhatsApp</h2>
+        <p>Ini penting dan kami menjelaskannya secara eksplisit:</p>
+        <div class="legal-highlight">
+          <p><strong>Nomor WhatsApp yang kamu masukkan pada fitur WA Tagih:</strong></p>
+          <ul>
+            <li><strong>tidak disimpan</strong> ke database Nyangkut.id;</li>
+            <li><strong>tidak menjadi</strong> bagian dari data transaksi;</li>
+            <li><strong>tidak dikirim</strong> ke sistem AI;</li>
+            <li><strong>tidak digunakan</strong> untuk pemasaran;</li>
+            <li><strong>tidak dijual</strong> atau dibagikan kepada pihak ketiga oleh Nyangkut.id;</li>
+            <li><strong>tidak digunakan</strong> untuk pengiriman pesan otomatis.</li>
+          </ul>
+          <p>
+            Nomor tersebut hanya digunakan <strong>di perangkatmu (client-side)</strong>
+            untuk membentuk tautan yang membuka WhatsApp. Setelah tautan dibuat,
+            nomor tidak disimpan di mana pun oleh Nyangkut.id.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <h2>3. Isi Pesan WA Tagih</h2>
+        <p>
+          Draft pesan dibuat berdasarkan data transaksi yang sedang kamu buka, yang
+          dapat mencakup nama pihak terkait, sisa nominal, dan tanggal jatuh tempo
+          jika tersedia.
+        </p>
+        <p>Sebelum WhatsApp dibuka, kamu dapat melihat draft tersebut. Setelah WhatsApp terbuka, kamu dapat:</p>
+        <ul>
+          <li>membaca pesan;</li>
+          <li>mengubah pesan;</li>
+          <li>membatalkan; atau</li>
+          <li>mengirim pesan.</li>
+        </ul>
+        <p>
+          Nyangkut.id <strong>tidak mengirim pesan secara otomatis</strong> atas namamu.
+        </p>
+      </section>
+
+      <section>
+        <h2>4. Data Penggunaan untuk Batas Fitur</h2>
+        <p>
+          Untuk mencegah penyalahgunaan fitur WA Tagih, Nyangkut.id mencatat
+          penggunaan fitur pada tabel <code>wa_reminder_usage</code> dengan data
+          sebagai berikut:
+        </p>
+        <ul>
+          <li><code>user_id</code> — pengenal akun pengguna;</li>
+          <li><code>used_at</code> — waktu penggunaan.</li>
+        </ul>
+        <p>Kami tegaskan bahwa tabel ini <strong>tidak menyimpan</strong>:</p>
+        <ul>
+          <li>nomor WhatsApp tujuan;</li>
+          <li>nama penerima pesan;</li>
+          <li>isi pesan;</li>
+          <li>nominal transaksi.</li>
+        </ul>
+        <p>
+          Batas saat ini adalah <strong>maksimal 10 penggunaan per akun per hari</strong>.
+        </p>
+      </section>
+
+      <section>
+        <h2>5. Tujuan Pemrosesan Data</h2>
+        <p>Data yang kami proses digunakan untuk:</p>
+        <ul>
+          <li>menyediakan dan mengoperasikan layanan Nyangkut.id;</li>
+          <li>menyimpan dan mengelola catatan transaksimu;</li>
+          <li>menghitung sisa nominal dan status transaksi;</li>
+          <li>menampilkan kalender jatuh tempo;</li>
+          <li>mengirim pengingat email yang kamu butuhkan;</li>
+          <li>menjaga keamanan layanan dan mencegah penyalahgunaan;</li>
+          <li>mengembangkan dan meningkatkan layanan;</li>
+          <li>memenuhi kewajiban hukum jika berlaku.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>6. Minimisasi Data</h2>
+        <p>Prinsip kami sederhana:</p>
+        <blockquote>
+          Jika suatu data tidak diperlukan untuk menjalankan fitur, kami berusaha
+          untuk tidak menyimpannya.
+        </blockquote>
+        <p>
+          Fitur WA Tagih adalah contoh nyata prinsip ini: nomor WhatsApp hanya
+          diperlukan sesaat untuk membuka WhatsApp, sehingga nomor tersebut tidak
+          disimpan.
+        </p>
+      </section>
+
+      <section>
+        <h2>7. Keamanan</h2>
+        <p>
+          Nyangkut.id menerapkan langkah-langkah teknis dan organisasional yang wajar
+          untuk melindungi datamu, termasuk:
+        </p>
+        <ul>
+          <li>isolasi data antar pengguna (<em>user isolation</em>) — kamu hanya dapat mengakses data milikmu sendiri;</li>
+          <li>kontrol akses berbasis peran pada database;</li>
+          <li>pembatasan kolom yang dapat diubah langsung oleh pengguna.</li>
+        </ul>
+        <p>
+          Tidak ada sistem yang sepenuhnya kebal terhadap risiko keamanan. Kami
+          terus berupaya menjaga dan meningkatkan perlindungan data.
+        </p>
+      </section>
+
+      <section>
+        <h2>8. Penyedia Layanan Pihak Ketiga</h2>
+        <p>
+          Untuk mengoperasikan Nyangkut.id, kami menggunakan penyedia layanan
+          pihak ketiga sebagai berikut:
+        </p>
+        <ul>
+          <li><strong>Supabase</strong> — autentikasi dan database;</li>
+          <li><strong>Resend</strong> — pengiriman email pengingat;</li>
+          <li><strong>Vercel</strong> — hosting aplikasi;</li>
+          <li><strong>WhatsApp</strong> — hanya melalui tautan yang kamu buka sendiri dari perangkatmu (bukan integrasi pengiriman pesan);</li>
+          <li><strong>Google Fonts</strong> — font tampilan situs.</li>
+        </ul>
+        <p>
+          Masing-masing penyedia memiliki kebijakan privasinya sendiri.
+        </p>
+      </section>
+
+      <section>
+        <h2>9. WhatsApp sebagai Pihak Ketiga</h2>
+        <p>Terkait fitur WA Tagih, batas peran Nyangkut.id adalah:</p>
+        <ul>
+          <li>membuat draft pesan;</li>
+          <li>membentuk tautan untuk membuka WhatsApp.</li>
+        </ul>
+        <p>
+          Nyangkut.id <strong>tidak mengontrol</strong> bagaimana WhatsApp memproses,
+          menyimpan, atau menampilkan pesan setelah kamu menggunakan WhatsApp.
+          Pengelolaan pesan setelah itu mengikuti kebijakan WhatsApp.
+        </p>
+      </section>
+
+      <section>
+        <h2>10. Hak Pengguna</h2>
+        <p>
+          Sesuai dengan hukum yang berlaku, kamu memiliki hak terkait data pribadimu,
+          antara lain hak untuk mengakses, memperbaiki, dan meminta penghapusan data
+          tertentu.
+        </p>
+        <p>
+          Untuk permintaan terkait data pribadimu, hubungi kami melalui:
+        </p>
+        <p class="legal-contact"><a href="mailto:pengaduan@nyangkut.id">pengaduan@nyangkut.id</a></p>
+        <p>
+          Kami akan menindaklanjuti permintaanmu sesuai dengan kemampuan sistem dan
+          ketentuan yang berlaku.
+        </p>
+      </section>
+
+      <section>
+        <h2>11. Penyimpanan Data (Retention)</h2>
+        <p>
+          Data akun dan catatan transaksimu disimpan selama akunmu aktif dan
+          diperlukan untuk menyediakan layanan. Jika kamu menghapus akun atau
+          meminta penghapusan data, kami akan memprosesnya sesuai kemampuan sistem
+          dan kewajiban hukum yang berlaku.
+        </p>
+        <p>
+          Data penggunaan fitur WA Tagih (<code>wa_reminder_usage</code>) disimpan
+          untuk keperluan keamanan dan pencegahan penyalahgunaan, dan dapat dibersihkan
+          secara berkala.
+        </p>
+      </section>
+
+      <section>
+        <h2>12. Perubahan Kebijakan Privasi</h2>
+        <p>
+          Kebijakan Privasi ini dapat diperbarui dari waktu ke waktu. Tanggal
+          pembaruan terakhir selalu ditampilkan di bagian atas halaman ini.
+        </p>
+      </section>
+
+      <section>
+        <h2>13. Kontak</h2>
+        <p>
+          Untuk pertanyaan mengenai Kebijakan Privasi ini, hubungi kami melalui:
+        </p>
+        <p class="legal-contact"><a href="mailto:support@nyangkut.id">support@nyangkut.id</a></p>
+      </section>
+
+      <nav class="legal-nav" aria-label="Dokumen legal lainnya">
+        <a href="/syarat-ketentuan/">Syarat dan Ketentuan</a>
+        <span aria-hidden="true">·</span>
+        <a href="/cara-kerja/">Cara Kerja Nyangkut.id</a>
+        <span aria-hidden="true">·</span>
+        <a href="https://www.nyangkut.id/">Kembali ke Beranda</a>
+      </nav>
+    </main>
+
+    <footer class="legal-foot">
+      <p>© 2026 Nyangkut.id</p>
+    </footer>
+  </body>
+</html>

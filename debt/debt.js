@@ -81,18 +81,26 @@
 
     setText('[data-d="person_name"]', debt.person_name);
 
+    // Avatar inisial (presentation only).
+    var avEl = document.querySelector("[data-avatar]");
+    if (avEl) {
+      avEl.textContent = (String(debt.person_name || "?").trim().charAt(0) || "?").toUpperCase();
+      avEl.classList.toggle("av-receivable", debt.direction === "receivable");
+      avEl.classList.toggle("av-payable", debt.direction !== "receivable");
+    }
+
     var dirChip = document.querySelector('[data-d="dir_chip"]');
     var dirSub = document.querySelector('[data-d="dir_sub"]');
     if (debt.direction === "receivable") {
       dirChip.textContent = "Nyangkut";
       dirChip.className = "chip chip-dir-receivable";
       dirSub.textContent = "Uang gue masih di orang lain.";
-      setText('[data-d="sisa_sub"]', "Uang yang harus balik ke lo");
+      setText('[data-d="sisa_sub"]', "Uang yang harus balik ke kamu");
     } else {
-      dirChip.textContent = "Utang lo";
+      dirChip.textContent = "Utang kamu";
       dirChip.className = "chip chip-dir-payable";
       dirSub.textContent = "Gue masih punya utang.";
-      setText('[data-d="sisa_sub"]', "Uang yang harus lo bayar");
+      setText('[data-d="sisa_sub"]', "Uang yang harus kamu bayar");
     }
 
     var stChip = document.querySelector('[data-d="status_chip"]');
@@ -115,8 +123,19 @@
       noteWrap.hidden = true;
     }
 
+    // Badge jika debt dibuat otomatis dari catatan setiap bulan.
+    var recurBadge = document.querySelector("[data-recur-badge]");
+    if (recurBadge) recurBadge.hidden = !debt.recurring_rule_id;
+
     // CTA hanya kalau belum lunas
     document.querySelector("[data-cta-wrap]").hidden = isPaid;
+    // Tombol WA hanya untuk receivable yang belum lunas (bukan payable, bukan paid)
+    var waBtn = document.querySelector("[data-wa-remind]");
+    if (waBtn) {
+      waBtn.hidden = !(debt.direction === "receivable" && !isPaid && remaining() > 0);
+    }
+    // Hapus catatan hanya untuk yang sudah lunas
+    document.querySelector("[data-danger-wrap]").hidden = !isPaid;
 
     // Riwayat pembayaran
     var list = document.querySelector("[data-history-list]");
@@ -165,7 +184,7 @@
 
       // RLS: hanya baris milik user ini yang kembali; milik orang lain -> 0 rows.
       var dRes = await client.from("debts")
-        .select("id, direction, person_name, amount, paid_amount, status, note, due_date")
+        .select("id, direction, person_name, amount, paid_amount, status, note, due_date, recurring_rule_id")
         .eq("id", debtId)
         .maybeSingle();
       if (dRes.error) throw dRes.error;
@@ -196,25 +215,212 @@
   var payError = document.querySelector("[data-pay-error]");
   var payAmountError = document.querySelector("[data-pay-amount-error]");
 
+  function lockScroll(lock) {
+    document.body.style.overflow = lock ? "hidden" : "";
+  }
+
+  // Helper buka/tutup modal dengan animasi (presentation only).
+  function showModal(el) {
+    el.hidden = false;
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { el.classList.add("show"); });
+    });
+  }
+  function hideModal(el) {
+    el.classList.remove("show");
+    setTimeout(function () {
+      if (!el.classList.contains("show")) el.hidden = true;
+    }, 200);
+  }
+
   function openPayModal() {
     if (!debt || debt.status === "paid") return;
     payForm.reset();
     payDate.value = todayStr();
+    payDate.max = todayStr(); // tanggal pembayaran tidak boleh di masa depan
     payError.hidden = true;
     payAmountError.hidden = true;
     var ctx = document.querySelector("[data-pay-context]");
     if (ctx) ctx.textContent = "Sisa " + rupiah(remaining()) + " dari " + debt.person_name + ".";
-    payModal.hidden = false;
+    showModal(payModal);
+    lockScroll(true);
     setTimeout(function () { payAmount.focus(); }, 50);
   }
   function closePayModal() {
-    payModal.hidden = true;
+    hideModal(payModal);
+    lockScroll(false);
     setPayBusy(false);
   }
   function setPayBusy(b) {
     busy = b;
     paySubmit.disabled = b;
     payLabel.textContent = b ? "Menyimpan…" : "Simpan Pembayaran";
+  }
+
+  // ---------- WA Tagih rate limit (abuse prevention) ----------
+  // Maksimal 10 penggunaan per akun per hari (WIB).
+  // Yang dicatat: user_id + waktu. Nomor tujuan TIDAK PERNAH dicatat.
+  var WA_DAILY_LIMIT = 10;
+
+  // Awal hari ini dalam WIB sebagai ISO string (untuk filter used_at).
+  function jakartaDayStartISO() {
+    try {
+      var fmt = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jakarta",
+        year: "numeric", month: "2-digit", day: "2-digit",
+      });
+      var parts = fmt.formatToParts(new Date());
+      var get = function (t) {
+        var p = parts.find(function (x) { return x.type === t; });
+        return p ? p.value : "01";
+      };
+      // 00:00 WIB = 17:00 UTC hari sebelumnya (WIB = UTC+7).
+      var midnight = Date.UTC(+get("year"), +get("month") - 1, +get("day")) - 7 * 3600 * 1000;
+      return new Date(midnight).toISOString();
+    } catch (e) {
+      // Fallback: 24 jam terakhir.
+      return new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    }
+  }
+
+  async function getWaUsageToday() {
+    try {
+      var c = await waitForClient();
+      if (!c) return 0;
+      var res = await c.from("wa_reminder_usage")
+        .select("id", { count: "exact", head: true })
+        .gte("used_at", jakartaDayStartISO());
+      if (res.error) throw res.error;
+      return res.count || 0;
+    } catch (e) {
+      // Tabel belum ada atau network gagal -> izinkan (soft control).
+      console.warn("[Nyangkut] WA rate limit check gagal:", e);
+      return 0;
+    }
+  }
+
+  async function logWaUsage() {
+    try {
+      var c = await waitForClient();
+      if (!c) return;
+      var session = await c.auth.getSession();
+      var uid = session && session.data && session.data.session
+        ? session.data.session.user.id : null;
+      if (!uid) return;
+      await c.from("wa_reminder_usage").insert({ user_id: uid });
+    } catch (e) {
+      // Gagal log -> tetap izinkan (fail open, soft control).
+      console.warn("[Nyangkut] WA usage log gagal:", e);
+    }
+  }
+
+  // ---------- Ingatkan via WhatsApp ----------
+  // 100% client-side. Nomor tidak disimpan, tidak dikirim ke server.
+  var waModal = document.querySelector("[data-wa-modal]");
+  var waForm = document.querySelector("[data-wa-form]");
+  var waPhone = document.getElementById("wa-phone");
+  var waError = document.querySelector("[data-wa-error]");
+
+  // Normalisasi nomor Indonesia ke format internasional untuk wa.me.
+  // 0812... -> 62812..., +62812... -> 62812..., 62812... -> 62812...
+  function normalizeWaNumber(input) {
+    var digits = String(input || "").replace(/\D/g, "");
+    if (digits.startsWith("62")) {
+      // sudah format internasional
+    } else if (digits.startsWith("0")) {
+      digits = "62" + digits.slice(1);
+    } else if (digits.startsWith("8")) {
+      digits = "62" + digits;
+    } else {
+      return null;
+    }
+    // Nomor HP Indonesia: 628 + 8-11 digit
+    if (!/^628\d{8,11}$/.test(digits)) return null;
+    return digits;
+  }
+
+  // Template pesan natural (bukan bahasa debt collector).
+  function buildWaMessage() {
+    var name = debt.person_name;
+    var rem = remaining();
+    var amountStr = rupiah(rem);
+    var isPartial = debt.status === "partial" && Number(debt.paid_amount) > 0;
+    var amountWord = isPartial ? "sisa " + amountStr : "uang " + amountStr;
+
+    var body;
+    if (debt.due_date) {
+      body = "mau ingetin soal " + amountWord + " yang jatuh tempo " + fmtDateLong(debt.due_date) + " ya.";
+    } else {
+      body = "mau ingetin soal " + amountWord + " yang kemarin ya.";
+    }
+    return "Hai " + name + ", " + body + " Kalau sudah sempat, boleh dibalikin. Makasih 🙏";
+  }
+
+  function openWaModal() {
+    if (!debt || debt.direction !== "receivable" || debt.status === "paid") return;
+    waForm.reset();
+    waError.hidden = true;
+    var previewWrap = document.querySelector("[data-wa-preview-wrap]");
+    var preview = document.querySelector("[data-wa-preview]");
+    if (previewWrap && preview) {
+      preview.textContent = buildWaMessage();
+      previewWrap.hidden = false;
+    }
+    showModal(waModal);
+    lockScroll(true);
+    setTimeout(function () { waPhone.focus(); }, 50);
+  }
+  function closeWaModal() {
+    hideModal(waModal);
+    lockScroll(false);
+  }
+
+  document.querySelectorAll("[data-wa-remind]").forEach(function (b) {
+    b.addEventListener("click", openWaModal);
+  });
+  document.querySelectorAll("[data-wa-close]").forEach(function (b) {
+    b.addEventListener("click", closeWaModal);
+  });
+  if (waModal) {
+    waModal.addEventListener("click", function (e) {
+      if (e.target === waModal) closeWaModal();
+    });
+  }
+
+  if (waForm) {
+    waForm.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var normalized = normalizeWaNumber(waPhone.value);
+      if (!normalized) {
+        waError.textContent = "Nomor WhatsApp belum valid.";
+        waError.hidden = false;
+        waPhone.focus();
+        return;
+      }
+      waError.hidden = true;
+
+      // Rate limit: maksimal 10x per hari per akun (soft control).
+      var used = await getWaUsageToday();
+      if (used >= WA_DAILY_LIMIT) {
+        waError.textContent = "Kamu sudah mencapai batas 10 pengingat WhatsApp hari ini. Coba lagi besok ya.";
+        waError.hidden = false;
+        return;
+      }
+
+      // Catat penggunaan (hanya user_id + waktu, tanpa nomor).
+      // Tidak await agar tidak menghambat UX; gagal log = tetap lanjut.
+      logWaUsage();
+
+      // Buka WhatsApp dengan pesan terisi. User yang tekan Send.
+      // Nomor hanya dipakai di sini untuk membentuk URL — tidak disimpan.
+      var url = "https://wa.me/" + normalized + "?text=" + encodeURIComponent(buildWaMessage());
+      closeWaModal();
+      window.open(url, "_blank", "noopener");
+    });
+    // Sembunyikan error saat user mengetik ulang
+    waPhone.addEventListener("input", function () {
+      waError.hidden = true;
+    });
   }
 
   document.querySelectorAll("[data-add-payment]").forEach(function (b) {
@@ -272,9 +478,101 @@
       payError.textContent =
         (msg.includes("check") || msg.includes("23514"))
           ? "Nominal melebihi sisa. Coba jumlah yang lebih kecil."
-          : "Gagal menyimpan. Periksa koneksi lo lalu coba lagi.";
+          : "Gagal menyimpan. Periksa koneksi kamu lalu coba lagi.";
       payError.hidden = false;
       setPayBusy(false);
+    });
+  });
+
+  // ---------- modal konfirmasi tandai lunas ----------
+  var paidModal = document.querySelector("[data-paid-modal]");
+  var paidConfirm = document.querySelector("[data-paid-confirm]");
+
+  function askMarkPaid() {
+    if (!debt || debt.status === "paid" || busy) return;
+    var txt = document.querySelector("[data-paid-text]");
+    if (txt) txt.textContent = "Catat pelunasan " + rupiah(remaining()) + " dari " + debt.person_name + "?";
+    showModal(paidModal);
+    lockScroll(true);
+  }
+  function closePaidModal() {
+    hideModal(paidModal);
+    lockScroll(false);
+    paidConfirm.disabled = false;
+  }
+  document.querySelectorAll("[data-mark-paid]").forEach(function (b) {
+    b.addEventListener("click", askMarkPaid);
+  });
+  document.querySelectorAll("[data-paid-close]").forEach(function (b) {
+    b.addEventListener("click", closePaidModal);
+  });
+  paidModal.addEventListener("click", function (e) {
+    if (e.target === paidModal) closePaidModal();
+  });
+
+  paidConfirm.addEventListener("click", function () {
+    if (!debt || debt.status === "paid" || busy) return;
+    busy = true;
+    paidConfirm.disabled = true;
+    // Tandai lunas = catat pembayaran sebesar sisa. Trigger DB yang set status paid.
+    client.from("payments").insert({
+      debt_id: debt.id,
+      amount: remaining(),
+      paid_at: todayStr(),
+      note: null,
+    }).then(function (res) {
+      if (res.error) throw res.error;
+      busy = false;
+      closePaidModal();
+      toast("Lunas! Catatan selesai. 🎉");
+      return load();
+    }).catch(function (err) {
+      console.error("[Nyangkut] tandai lunas gagal:", err);
+      busy = false;
+      closePaidModal();
+      toast("Gagal menyimpan. Coba lagi ya.");
+    });
+  });
+
+  // ---------- modal konfirmasi hapus catatan ----------
+  var debtDelModal = document.querySelector("[data-debt-del-modal]");
+  var debtDelConfirm = document.querySelector("[data-debt-del-confirm]");
+
+  function askDeleteDebt() {
+    if (!debt || debt.status !== "paid" || busy) return;
+    var txt = document.querySelector("[data-debt-del-text]");
+    if (txt) txt.textContent = "Hapus catatan ini? Riwayat pembayaran dan detail transaksi akan ikut dihapus.";
+    showModal(debtDelModal);
+    lockScroll(true);
+  }
+  function closeDebtDelModal() {
+    hideModal(debtDelModal);
+    lockScroll(false);
+    debtDelConfirm.disabled = false;
+  }
+  document.querySelectorAll("[data-delete-debt]").forEach(function (b) {
+    b.addEventListener("click", askDeleteDebt);
+  });
+  document.querySelectorAll("[data-debt-del-close]").forEach(function (b) {
+    b.addEventListener("click", closeDebtDelModal);
+  });
+  debtDelModal.addEventListener("click", function (e) {
+    if (e.target === debtDelModal) closeDebtDelModal();
+  });
+
+  debtDelConfirm.addEventListener("click", function () {
+    if (!debt || debt.status !== "paid" || busy) return;
+    busy = true;
+    debtDelConfirm.disabled = true;
+    // RLS: hanya debt milik user ini. Cascade hapus payments + reminders.
+    client.from("debts").delete().eq("id", debt.id).then(function (res) {
+      if (res.error) throw res.error;
+      window.location.assign("/dashboard/");
+    }).catch(function (err) {
+      console.error("[Nyangkut] hapus catatan gagal:", err);
+      busy = false;
+      closeDebtDelModal();
+      toast("Gagal menghapus. Coba lagi ya.");
     });
   });
 
@@ -287,10 +585,12 @@
     delTarget = paymentId;
     var txt = document.querySelector("[data-del-text]");
     if (txt && p) txt.textContent = "Yakin hapus pembayaran " + rupiah(p.amount) + " (" + fmtDateLong(p.paid_at) + ")?";
-    delModal.hidden = false;
+    showModal(delModal);
+    lockScroll(true);
   }
   function closeDelModal() {
-    delModal.hidden = true;
+    hideModal(delModal);
+    lockScroll(false);
     delTarget = null;
     delConfirm.disabled = false;
   }
@@ -304,6 +604,9 @@
     if (e.key === "Escape") {
       if (!payModal.hidden) closePayModal();
       if (!delModal.hidden) closeDelModal();
+      if (!paidModal.hidden) closePaidModal();
+      if (!debtDelModal.hidden) closeDebtDelModal();
+      if (waModal && !waModal.hidden) closeWaModal();
     }
   });
 
@@ -336,6 +639,12 @@
   });
   var retry = document.querySelector("[data-retry]");
   if (retry) retry.addEventListener("click", load);
+
+  // Kalau halaman dikembalikan dari bfcache (mis. tombol back setelah logout),
+  // validasi ulang session supaya data private tidak tampil basi.
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) load();
+  });
 
   load();
 })();

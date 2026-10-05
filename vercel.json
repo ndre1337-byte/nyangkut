@@ -1,26 +1,54 @@
 {
-  "rewrites": [
-    {
-      "source": "/login",
-      "destination": "/login/index.html"
-    },
-    {
-      "source": "/register",
-      "destination": "/register/index.html"
-    },
-    {
-      "source": "/dashboard",
-      "destination": "/dashboard/index.html"
-    },
-    {
-      "source": "/debt",
-      "destination": "/debt/index.html"
-    }
-  ],
   "crons": [
     {
       "path": "/api/reminders/run",
-      "schedule": "0 0 * * *"
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/recurring/run",
+      "schedule": "0 3 * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "destination": "/login/index.html",
+      "source": "/login"
+    },
+    {
+      "destination": "/register/index.html",
+      "source": "/register"
+    },
+    {
+      "destination": "/dashboard/index.html",
+      "source": "/dashboard"
+    },
+    {
+      "destination": "/debt/index.html",
+      "source": "/debt"
+    },
+    {
+      "destination": "/forgot-password/index.html",
+      "source": "/forgot-password"
+    },
+    {
+      "destination": "/reset-password/index.html",
+      "source": "/reset-password"
+    },
+    {
+      "destination": "/syarat-ketentuan/index.html",
+      "source": "/syarat-ketentuan"
+    },
+    {
+      "destination": "/kebijakan-privasi/index.html",
+      "source": "/kebijakan-privasi"
+    },
+    {
+      "destination": "/cara-kerja/index.html",
+      "source": "/cara-kerja"
+    },
+    {
+      "destination": "/pengaduan/index.html",
+      "source": "/pengaduan"
     }
   ]
 }

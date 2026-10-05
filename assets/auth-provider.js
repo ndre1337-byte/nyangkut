@@ -48,5 +48,23 @@
     signUp: (details) => provider.signUp(details),
     getSession: () => provider.getSession(),
     signOut: () => provider.signOut(),
+    resetPasswordForEmail: (email, redirectTo) => {
+      if (typeof provider.resetPasswordForEmail !== "function") {
+        return Promise.reject(new Error("Reset password belum didukung."));
+      }
+      return provider.resetPasswordForEmail(email, redirectTo);
+    },
+    updateUser: (attributes) => {
+      if (typeof provider.updateUser !== "function") {
+        return Promise.reject(new Error("Ubah password belum didukung."));
+      }
+      return provider.updateUser(attributes);
+    },
+    onAuthStateChange: (callback) => {
+      if (typeof provider.onAuthStateChange !== "function") {
+        return { data: { subscription: { unsubscribe() {} } } };
+      }
+      return provider.onAuthStateChange(callback);
+    },
   };
 })();
