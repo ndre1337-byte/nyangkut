@@ -25,6 +25,39 @@
   --shadow: 0 12px 40px rgba(99, 102, 241, 0.10);
   --shadow-sm: 0 4px 16px rgba(99, 102, 241, 0.07);
   --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light dark;
+}
+
+/* ============ DARK THEME ============ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --primary: #818CF8;
+  --primary-dark: #6366F1;
+  --lavender: #818CF8;
+  --lavender-soft: #232842;
+  --ink: #F8FAFC;
+  --muted: #A1A1AA;
+  --bg: #0F1117;
+  --card: #171A23;
+  --line: #2A2F3D;
+  --success: #4ADE80;
+  --success-soft: #12291A;
+  --warning: #FBBF24;
+  --warning-soft: #2A2113;
+  --danger: #F87171;
+  --danger-soft: #2A1518;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+body {
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -356,7 +389,7 @@ img { max-width: 100%; display: block; }
   color: var(--primary-dark);
 }
 .chat-bubble:nth-child(even) {
-  background: #fff;
+  background: var(--card);
   justify-self: end;
   border-bottom-right-radius: 6px;
   text-align: right;
@@ -406,7 +439,7 @@ img { max-width: 100%; display: block; }
 .feature-card h3 { font-size: 17.5px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
 .feature-card p { font-size: 14.5px; color: var(--muted); }
 .feature-wide { background: var(--lavender-soft); border-color: #C7D2FE; }
-.feature-wide .feature-icon { background: #fff; }
+.feature-wide .feature-icon { background: var(--card); }
 
 /* ---------- Showcase ---------- */
 .showcase { background: var(--lavender-soft); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -452,7 +485,7 @@ img { max-width: 100%; display: block; }
   border: 1px solid var(--line);
   overflow: hidden;
   box-shadow: var(--shadow);
-  background: #fff;
+  background: var(--card);
   aspect-ratio: 933 / 1175;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -463,7 +496,7 @@ img { max-width: 100%; display: block; }
   font-weight: 800;
   letter-spacing: 0.14em;
   color: var(--primary-dark);
-  background: #fff;
+  background: var(--card);
   border: 1px solid var(--line);
   padding: 4px 14px;
   border-radius: 999px;

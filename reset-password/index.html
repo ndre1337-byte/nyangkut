@@ -2,6 +2,12 @@
 <html lang="id">
   <head>
     <meta charset="utf-8" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      /* Early theme init — prevents flash. Safe if JS fails. */
+      (function(){try{var t=localStorage.getItem("nyangkut-theme");if(t!=="dark"&&t!=="light"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();
+    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#f7f8fc" />
     <title>Buat Password Baru — Nyangkut</title>
@@ -15,7 +21,8 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="/assets/supabase-client.js"></script>
     <script defer src="/assets/auth-ui.js"></script>
-  </head>
+      <script src="/assets/theme.js" defer></script>
+</head>
   <body data-page="reset-password">
     <div class="page-shell">
       <header class="site-header">

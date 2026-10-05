@@ -4,6 +4,7 @@
    Semua logic JS dipertahankan; hanya presentation yang berubah.
    ============================================================ */
 :root {
+  color-scheme: light dark;
   --bg: #f8fafc;
   --surface: #ffffff;
   --surface-soft: #eef2ff;
@@ -27,6 +28,49 @@
   --shadow-lg: 0 16px 48px rgba(17, 24, 39, 0.14);
   --sidebar-w: 232px;
   --ease: 0.18s ease;
+}
+
+/* ============ DARK THEME ============ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0F1117;
+  --surface: #171A23;
+  --surface-soft: #1D2130;
+  --primary: #818CF8;
+  --primary-dark: #6366F1;
+  --primary-soft: #232842;
+  --text: #F8FAFC;
+  --text-muted: #A1A1AA;
+  --border: #2A2F3D;
+  --danger: #F87171;
+  --danger-bg: #2A1518;
+  --success: #4ADE80;
+  --success-bg: #12291A;
+  --warning: #FBBF24;
+  --warning-bg: #2A2113;
+  --info: #60A5FA;
+  --info-bg: #14202F;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+/* Light theme transition (subtle) */
+body {
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+/* Dark mode: fix hardcoded light surfaces */
+[data-theme="dark"] .split-person-card.is-self {
+  background: var(--surface-soft);
+}
+[data-theme="dark"] .split-empty,
+[data-theme="dark"] .split-add {
+  background: var(--surface);
+}
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -602,8 +646,8 @@ img { max-width: 100%; display: block; }
 
 /* ---------- premium teaser ---------- */
 .premium-teaser {
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-  border: 1px solid #c7d2fe;
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface-soft) 100%);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 22px 20px;
   box-shadow: var(--shadow);
@@ -1177,6 +1221,43 @@ a.hub-card:hover, button.hub-card:hover {
   border-radius: 12px;
 }
 .split-add[hidden] { display: none; }
+/* Theme section in Menu sheet */
+.sheet-section {
+  padding: 4px 0 12px;
+}
+.sheet-section-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.theme-seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+/* Desktop sidebar theme toggle */
+.side-theme {
+  padding: 8px 12px;
+  margin-bottom: 4px;
+}
+.side-theme-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.side-theme-seg .seg-opt {
+  padding: 6px 4px;
+}
+.side-theme-seg .seg-title {
+  font-size: 1.1rem;
+}
 .split-amount-row {
   display: flex;
   align-items: center;
@@ -1578,7 +1659,7 @@ a.hub-card:hover, button.hub-card:hover {
 }
 
 .chip-dir-receivable { background: var(--primary-soft); color: var(--primary-dark); }
-.chip-dir-payable { background: #f1f5f9; color: var(--text-muted); }
+.chip-dir-payable { background: var(--surface-soft); color: var(--text-muted); }
 .chip-status-partial { background: var(--warning-bg); color: var(--warning); }
 
 .tx-note {

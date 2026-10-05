@@ -2,6 +2,12 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      /* Early theme init — prevents flash. Safe if JS fails. */
+      (function(){try{var t=localStorage.getItem("nyangkut-theme");if(t!=="dark"&&t!=="light"){t=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){}})();
+    </script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nyangkut — Biar nggak lupa uang kamu masih nyangkut di mana</title>
   <meta name="description" content="Nyangkut membantu kamu mencatat siapa yang belum bayar, siapa yang harus kamu bayar, dan kapan jatuh temponya. Gratis untuk mulai." />
@@ -11,6 +17,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/logo-mark.png?v=2" />
   <link rel="apple-touch-icon" href="assets/logo-mark.png?v=2" />
+    <script src="/assets/theme.js" defer></script>
 </head>
 <body>
 

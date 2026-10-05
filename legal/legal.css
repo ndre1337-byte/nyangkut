@@ -3,6 +3,7 @@
    Clean, mobile-first, readable typography.
    ============================================================ */
 :root {
+  color-scheme: light dark;
   --bg: #f8fafc;
   --surface: #ffffff;
   --primary: #6366f1;
@@ -13,6 +14,30 @@
   --border: #e2e8f0;
   --radius: 16px;
   --shadow: 0 1px 2px rgba(17, 24, 39, 0.04), 0 8px 24px rgba(99, 102, 241, 0.06);
+}
+
+/* ============ DARK THEME ============ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0F1117;
+  --surface: #171A23;
+  --primary: #818CF8;
+  --primary-dark: #6366F1;
+  --primary-soft: #232842;
+  --text: #F8FAFC;
+  --text-muted: #A1A1AA;
+  --border: #2A2F3D;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+body {
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -234,13 +259,15 @@ img { max-width: 100%; display: block; }
 }
 
 .do-card {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid #16a34a;
 }
 
 .dont-card {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid #dc2626;
 }
 
 .do-card h3, .dont-card h3 {
@@ -263,8 +290,8 @@ img { max-width: 100%; display: block; }
 
 /* ---------- example message ---------- */
 .msg-example {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 16px 18px;
   margin: 16px 0;

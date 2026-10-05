@@ -3,6 +3,7 @@
    Design tokens sama dengan dashboard.
    ============================================================ */
 :root {
+  color-scheme: light dark;
   --bg: #f8fafc;
   --surface: #ffffff;
   --surface-soft: #eef2ff;
@@ -26,6 +27,40 @@
   --shadow-lg: 0 16px 48px rgba(17, 24, 39, 0.14);
   --sidebar-w: 232px;
   --ease: 0.18s ease;
+}
+
+/* ============ DARK THEME ============ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0F1117;
+  --surface: #171A23;
+  --surface-soft: #1D2130;
+  --primary: #818CF8;
+  --primary-dark: #6366F1;
+  --primary-soft: #232842;
+  --text: #F8FAFC;
+  --text-muted: #A1A1AA;
+  --border: #2A2F3D;
+  --danger: #F87171;
+  --danger-bg: #2A1518;
+  --success: #4ADE80;
+  --success-bg: #12291A;
+  --warning: #FBBF24;
+  --warning-bg: #2A2113;
+  --info: #60A5FA;
+  --info-bg: #14202F;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+body {
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -404,7 +439,7 @@ img { max-width: 100%; display: block; }
 /* ---------- danger zone ---------- */
 .danger-zone {
   background: var(--surface);
-  border: 1px dashed #f6d3d8;
+  border: 1px dashed var(--danger);
   border-radius: var(--radius);
   padding: 20px;
   text-align: center;
@@ -501,7 +536,7 @@ img { max-width: 100%; display: block; }
 }
 
 .btn-danger-ghost {
-  border: 1px solid #f6d3d8;
+  border: 1px solid var(--danger);
   background: var(--surface);
   color: var(--danger);
   font-family: inherit;
@@ -537,8 +572,8 @@ img { max-width: 100%; display: block; }
 
 /* Preview pesan WA di modal */
 .wa-preview {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: var(--success-bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 16px;
