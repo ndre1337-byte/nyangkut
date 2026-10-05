@@ -588,140 +588,204 @@ img { max-width: 100%; display: block; }
 }
 
 /* ---------- Premium Hub ---------- */
+/* ============ Premium Hub — Dark Luxury ============ */
+/* Nyangkut = Blue + Purple | Premium = Gold accent | Active = Green | BG = Dark Navy */
 .premium-hub {
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-  border: 1px solid #c7d2fe;
-  border-radius: var(--radius);
-  padding: 22px 20px;
-  box-shadow: var(--shadow);
+  background: #0A0B14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 28px 22px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(139, 92, 246, 0.08);
   scroll-margin-top: 20px;
   position: relative;
   overflow: hidden;
+  color: #F8FAFC;
 }
 .premium-hub[hidden] { display: none; }
 .premium-hub::before {
   content: "";
   position: absolute;
-  top: -40px;
-  right: -40px;
-  width: 140px;
-  height: 140px;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
-  background: rgba(99, 102, 241, 0.12);
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+.premium-hub::after {
+  content: "";
+  position: absolute;
+  bottom: -40px;
+  left: -40px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
   pointer-events: none;
 }
 .hub-head {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 6px;
+  gap: 16px;
+  margin-bottom: 8px;
   position: relative;
+  z-index: 1;
 }
 .hub-icon {
   flex: none;
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 1.6rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #23263F 0%, #3a2f1a 100%);
+  border: 1px solid rgba(252, 211, 77, 0.3);
+  color: #FCD34D;
+  font-size: 1.8rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 0 24px rgba(252, 211, 77, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 .hub-head h2 {
-  margin: 0 0 6px;
-  font-size: 1.15rem;
+  margin: 0 0 8px;
+  font-size: 1.3rem;
   font-weight: 800;
   letter-spacing: -0.01em;
+  color: #F8FAFC;
 }
 .premium-pill-active {
-  background: #059669;
+  background: #22C55E;
+  color: #fff;
   margin-bottom: 0;
+  box-shadow: 0 2px 12px rgba(34, 197, 94, 0.3);
 }
 .hub-sub {
-  margin: 0 0 18px;
-  font-size: 0.88rem;
-  color: var(--text-muted);
+  margin: 0 0 24px;
+  font-size: 0.92rem;
+  color: #9CA3AF;
   position: relative;
+  z-index: 1;
+  line-height: 1.6;
 }
 .hub-sec-title {
-  margin: 0 0 10px;
-  font-size: 0.82rem;
+  margin: 0 0 12px;
+  font-size: 0.8rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--primary-dark);
+  letter-spacing: 0.08em;
+  color: #F8FAFC;
   position: relative;
+  z-index: 1;
+}
+.hub-sec-title::after {
+  content: "";
+  display: block;
+  width: 32px;
+  height: 2px;
+  background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+  border-radius: 2px;
+  margin-top: 6px;
 }
 .hub-features {
   display: grid;
-  gap: 8px;
-  margin-bottom: 18px;
+  gap: 10px;
+  margin-bottom: 24px;
   position: relative;
+  z-index: 1;
 }
 .hub-features:last-child { margin-bottom: 0; }
 .hub-card {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   width: 100%;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(99, 102, 241, 0.15);
-  border-radius: 14px;
-  padding: 12px 14px;
+  background: #1A1F36;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 16px;
   font: inherit;
-  color: inherit;
+  color: #F8FAFC;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color var(--ease), transform var(--ease);
+  transition: background var(--ease), border-color var(--ease), transform var(--ease);
+  position: relative;
 }
 a.hub-card:hover, button.hub-card:hover {
-  border-color: var(--primary);
+  background: #232B4A;
+  border-color: rgba(139, 92, 246, 0.3);
   transform: translateY(-1px);
+}
+/* Pengingat Lanjutan: subtle gold accent */
+.hub-card[data-hub-reminder] {
+  border-left: 3px solid rgba(252, 211, 77, 0.4);
+}
+/* Catatan Setiap Bulan: blue accent */
+.hub-card[data-hub-recurring] {
+  border-left: 3px solid rgba(59, 130, 246, 0.5);
 }
 .hub-card.is-future {
   cursor: default;
-  opacity: 0.75;
+  opacity: 0.7;
+  border-left: 3px solid rgba(139, 92, 246, 0.3);
 }
 .hub-emoji {
   flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.hub-card[data-hub-reminder] .hub-emoji {
+  background: rgba(252, 211, 77, 0.1);
+  border-color: rgba(252, 211, 77, 0.2);
+}
+.hub-card[data-hub-recurring] .hub-emoji {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.25);
 }
 .hub-text {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 .hub-text strong {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   font-weight: 700;
+  color: #F8FAFC;
 }
 .hub-text small {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  line-height: 1.45;
+  font-size: 0.8rem;
+  color: #9CA3AF;
+  line-height: 1.5;
 }
 .hub-status {
   flex: none;
   font-size: 0.7rem;
   font-weight: 800;
-  color: #059669;
-  background: #d1fae5;
-  padding: 4px 10px;
+  color: #fff;
+  background: #22C55E;
+  padding: 5px 12px;
   border-radius: 999px;
   letter-spacing: 0.03em;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+  white-space: nowrap;
 }
 .hub-status-future {
   flex: none;
   font-size: 0.7rem;
   font-weight: 700;
-  color: var(--text-muted);
-  background: rgba(0, 0, 0, 0.06);
-  padding: 4px 10px;
+  color: #9CA3AF;
+  background: rgba(139, 92, 246, 0.12);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  padding: 5px 12px;
   border-radius: 999px;
   letter-spacing: 0.03em;
   white-space: nowrap;
