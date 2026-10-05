@@ -1800,6 +1800,7 @@ a.hub-card:hover, button.hub-card:hover {
   gap: 10px;
   margin-top: 22px;
 }
+.form-actions[hidden] { display: none !important; }
 
 .form-actions .btn-ghost { flex: 1; padding: 13px; font-size: 0.95rem; }
 .form-actions .btn-primary { flex: 2; }
